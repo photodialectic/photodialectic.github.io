@@ -259,6 +259,17 @@ title: Cryptogram
   function render() {
     const el = document.getElementById('ciphertext');
     el.innerHTML = '';
+
+    let wordTiles = [];
+    function flushWord() {
+      if (wordTiles.length === 0) return;
+      const wrap = document.createElement('span');
+      wrap.style.cssText = 'display:inline-flex;white-space:nowrap';
+      for (const t of wordTiles) wrap.appendChild(t);
+      el.appendChild(wrap);
+      wordTiles = [];
+    }
+
     puzzle.tokens.forEach((tok, i) => {
       const tile = document.createElement('span');
       tile.className = 'tile';
@@ -282,10 +293,20 @@ title: Cryptogram
           const idx = puzzle.orderedCiphers.indexOf(tok);
           selectCipher(idx);
         });
+        wordTiles.push(tile);
+      } else {
+        flushWord();
+        if (type === 'space') {
+          const sp = document.createElement('span');
+          sp.style.cssText = 'display:inline-block;width:0.6em';
+          el.appendChild(sp);
+        } else {
+          el.appendChild(tile);
+        }
       }
       tile.appendChild(plainSpan);
-      el.appendChild(tile);
     });
+    flushWord();
   }
 
   function renderAlphabet() {
