@@ -34,10 +34,15 @@
       text-decoration: none; color: #ddd; transition: border-color 0.2s, box-shadow 0.2s;
     }
     .card-list a:hover { border-color: #6af; box-shadow: 0 2px 12px rgba(102,170,255,0.12); }
+    nav { max-width: 640px; margin: 0 auto 1.5rem; display: flex; gap: 1rem; font-size: 0.85rem; }
+    nav a { color: #555; }
+    nav a:hover { color: #6af; }
+    nav .sep { color: #333; }
   </style>
 </head>
 <body>
   <main>
+    <nav><a href="/">photodialectic</a><span class="sep">&middot;</span><a href="/game/">games</a><span class="sep">&middot;</span><a href="/talks/">talks</a></nav>
     {{ content }}
   </main>
 </body>
