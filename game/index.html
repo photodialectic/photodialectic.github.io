@@ -1,0 +1,358 @@
+---
+layout: default
+title: Rocket Lander
+---
+
+<style>
+  #game {
+    display: block;
+    margin: 2rem auto;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    max-width: 100%;
+    cursor: none;
+  }
+  .controls {
+    text-align: center;
+    font-size: 0.85rem;
+    color: #888;
+    margin-top: -1rem;
+  }
+  .controls kbd {
+    font-family: inherit;
+    padding: 2px 6px;
+    border: 1px solid #ccc;
+    border-radius: 3px;
+    background: #f0f0f0;
+    font-size: 0.8rem;
+  }
+</style>
+
+<canvas id="game" width="640" height="480"></canvas>
+<p class="controls">
+  <kbd>&larr;</kbd> <kbd>&rarr;</kbd> rotate &middot;
+  <kbd>&uarr;</kbd> / <kbd>Space</kbd> thrust &middot;
+  <kbd>R</kbd> restart
+</p>
+
+<script>
+  const canvas = document.getElementById('game');
+  const ctx = canvas.getContext('2d');
+  const W = canvas.width, H = canvas.height;
+
+  const GRAVITY = 0.04;
+  const THRUST = 0.12;
+  const ROTATE_SPEED = 0.04;
+  const MAX_FUEL = 100;
+  const LANDING_VY = 1.2;
+  const LANDING_VX = 0.8;
+  const LANDING_ANGLE = 0.15;
+
+  const pad = { x: 270, w: 100, y: 440 };
+  const groundY = 450;
+
+  let rocket, terrain, stars, particles, gameOver, won, fuel;
+
+  function init() {
+    rocket = { x: 320, y: 60, vx: 0, vy: 0, angle: 0, w: 8, h: 24 };
+    fuel = MAX_FUEL;
+    gameOver = false;
+    won = false;
+    particles = [];
+    terrain = generateTerrain();
+    stars = Array.from({ length: 80 }, () => ({
+      x: Math.random() * W, y: Math.random() * (groundY - 40),
+      r: Math.random() * 1.5 + 0.5, a: Math.random()
+    }));
+  }
+
+  function generateTerrain() {
+    const pts = [];
+    const segments = 20;
+    for (let i = 0; i <= segments; i++) {
+      const x = (i / segments) * W;
+      let y;
+      if (x > pad.x - 10 && x < pad.x + pad.w + 10) {
+        y = pad.y;
+      } else {
+        const dist = Math.min(
+          Math.abs(x - (pad.x - 10)),
+          Math.abs(x - (pad.x + pad.w + 10))
+        );
+        const bump = Math.sin(x * 0.03) * 20 + Math.sin(x * 0.07) * 8;
+        y = pad.y + bump * Math.min(1, dist / 60);
+      }
+      pts.push({ x, y });
+    }
+    return pts;
+  }
+
+  function dist(a, b) {
+    return Math.sqrt((a.x - b.x) ** 2 + (a.y - b.y) ** 2);
+  }
+
+  function rectContains(rx, ry, rw, rh, px, py) {
+    return px >= rx - rw / 2 && px <= rx + rw / 2 && py >= ry - rh / 2 && py <= ry + rh / 2;
+  }
+
+  function spawnParticles(x, y, count, color, spread) {
+    for (let i = 0; i < count; i++) {
+      const a = Math.random() * Math.PI * 2;
+      const s = Math.random() * spread + 0.5;
+      particles.push({
+        x, y, vx: Math.cos(a) * s, vy: Math.sin(a) * s,
+        life: 1, decay: 0.015 + Math.random() * 0.025,
+        color
+      });
+    }
+  }
+
+  function update() {
+    if (gameOver || won) return;
+
+    const k = window.keys || {};
+
+    if (k['ArrowLeft'] || k['KeyA']) rocket.angle -= ROTATE_SPEED;
+    if (k['ArrowRight'] || k['KeyD']) rocket.angle += ROTATE_SPEED;
+
+    const thrusting = (k['ArrowUp'] || k['Space'] || k['KeyW']) && fuel > 0;
+    if (thrusting) {
+      const thrust = THRUST;
+      rocket.vx -= Math.sin(rocket.angle) * thrust;
+      rocket.vy -= Math.cos(rocket.angle) * thrust;
+      fuel = Math.max(0, fuel - 0.4);
+
+      const nozzleX = rocket.x - Math.sin(rocket.angle) * (rocket.h / 2 + 2);
+      const nozzleY = rocket.y + Math.cos(rocket.angle) * (rocket.h / 2 + 2);
+      spawnParticles(nozzleX, nozzleY, 3, '#ff8c00', 2);
+      spawnParticles(nozzleX, nozzleY, 2, '#ffd700', 1);
+    }
+
+    rocket.vy += GRAVITY;
+    rocket.x += rocket.vx;
+    rocket.y += rocket.vy;
+
+    // particles
+    for (const p of particles) {
+      p.x += p.vx;
+      p.y += p.vy;
+      p.life -= p.decay;
+    }
+    particles = particles.filter(p => p.life > 0);
+
+    // wrap horizontally
+    if (rocket.x < 0) rocket.x = W;
+    if (rocket.x > W) rocket.x = 0;
+
+    // collision with terrain
+    const r = rocket;
+    const hw = r.w / 2, hh = r.h / 2;
+    const corners = [
+      { x: r.x - hw, y: r.y - hh },
+      { x: r.x + hw, y: r.y - hh },
+      { x: r.x - hw, y: r.y + hh },
+      { x: r.x + hw, y: r.y + hh }
+    ];
+
+    // rotate corners by rocket angle
+    const cos = Math.cos(r.angle);
+    const sin = Math.sin(r.angle);
+    const rotated = corners.map(c => ({
+      x: r.x + (c.x - r.x) * cos - (c.y - r.y) * sin,
+      y: r.y + (c.x - r.x) * sin + (c.y - r.y) * cos
+    }));
+
+    const bottom = Math.max(...rotated.map(c => c.y));
+    const top = Math.min(...rotated.map(c => c.y));
+
+    // check terrain collision
+    for (const t of terrain) {
+      if (bottom >= t.y && top <= t.y + 10 && Math.abs(r.x - t.x) < 8) {
+        const onPad = r.x > pad.x && r.x < pad.x + pad.w;
+        const angleOk = Math.abs(r.angle) < LANDING_ANGLE;
+        const speedOk = Math.abs(r.vy) < LANDING_VY && Math.abs(r.vx) < LANDING_VX;
+
+        if (onPad && angleOk && speedOk && !gameOver) {
+          won = true;
+          r.y = t.y - hh;
+          r.vy = 0;
+          r.vx = 0;
+          spawnParticles(r.x, t.y, 30, '#44dd44', 4);
+        } else {
+          gameOver = true;
+          r.y = t.y - hh;
+          spawnParticles(r.x, t.y, 50, '#ff4444', 6);
+        }
+        return;
+      }
+    }
+
+    // fell off screen
+    if (rocket.y > H + 50) {
+      gameOver = true;
+    }
+  }
+
+  function draw() {
+    ctx.clearRect(0, 0, W, H);
+
+    // stars
+    for (const s of stars) {
+      const flicker = Math.sin(s.a + Date.now() * 0.001) * 0.3 + 0.7;
+      ctx.globalAlpha = flicker;
+      ctx.fillStyle = '#fff';
+      ctx.beginPath();
+      ctx.arc(s.x, s.y, s.r, 0, Math.PI * 2);
+      ctx.fill();
+    }
+    ctx.globalAlpha = 1;
+
+    // terrain
+    ctx.fillStyle = '#3a3a42';
+    ctx.strokeStyle = '#555';
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.moveTo(terrain[0].x, terrain[0].y);
+    for (const t of terrain) ctx.lineTo(t.x, t.y);
+    ctx.lineTo(W, H);
+    ctx.lineTo(0, H);
+    ctx.closePath();
+    ctx.fill();
+    ctx.stroke();
+
+    // landing pad
+    ctx.fillStyle = '#22aa66';
+    ctx.shadowColor = '#22aa66';
+    ctx.shadowBlur = 15;
+    ctx.fillRect(pad.x, pad.y - 2, pad.w, 6);
+    ctx.shadowBlur = 0;
+    ctx.fillStyle = '#33dd88';
+    ctx.fillRect(pad.x, pad.y - 2, pad.w, 3);
+    // pad markings
+    ctx.fillStyle = '#eeffdd';
+    ctx.fillRect(pad.x + 10, pad.y - 1, 8, 2);
+    ctx.fillRect(pad.x + pad.w - 18, pad.y - 1, 8, 2);
+
+    // particles (behind rocket)
+    for (const p of particles) {
+      ctx.globalAlpha = p.life;
+      ctx.fillStyle = p.color;
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, p.life * 3, 0, Math.PI * 2);
+      ctx.fill();
+    }
+    ctx.globalAlpha = 1;
+
+    // rocket
+    const r = rocket;
+    ctx.save();
+    ctx.translate(r.x, r.y);
+    ctx.rotate(r.angle);
+
+    // flame
+    if (!gameOver && !won && fuel > 0 && (window.keys?.['ArrowUp'] || window.keys?.['Space'] || window.keys?.['KeyW'])) {
+      const fl = 14 + Math.random() * 8;
+      const fw = 5 + Math.random() * 4;
+      ctx.fillStyle = '#ff6600';
+      ctx.beginPath();
+      ctx.moveTo(-fw / 2, r.h / 2 + 2);
+      ctx.lineTo(0, r.h / 2 + fl);
+      ctx.lineTo(fw / 2, r.h / 2 + 2);
+      ctx.fill();
+      ctx.fillStyle = '#ffcc00';
+      ctx.beginPath();
+      ctx.moveTo(-fw / 4, r.h / 2 + 2);
+      ctx.lineTo(0, r.h / 2 + fl * 0.7);
+      ctx.lineTo(fw / 4, r.h / 2 + 2);
+      ctx.fill();
+    }
+
+    // body
+    ctx.fillStyle = '#e0e0e8';
+    ctx.strokeStyle = '#889';
+    ctx.lineWidth = 1.5;
+    ctx.beginPath();
+    ctx.moveTo(0, -r.h / 2);
+    ctx.lineTo(-r.w / 2, r.h / 2);
+    ctx.lineTo(-r.w / 3, r.h / 2 - 4);
+    ctx.lineTo(r.w / 3, r.h / 2 - 4);
+    ctx.lineTo(r.w / 2, r.h / 2);
+    ctx.closePath();
+    ctx.fill();
+    ctx.stroke();
+
+    // window
+    ctx.fillStyle = '#66ccff';
+    ctx.beginPath();
+    ctx.arc(0, -r.h / 4, r.w / 3, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.fillStyle = '#aae0ff';
+    ctx.beginPath();
+    ctx.arc(-1, -r.h / 4 - 1, r.w / 6, 0, Math.PI * 2);
+    ctx.fill();
+
+    ctx.restore();
+
+    // HUD
+    ctx.fillStyle = 'rgba(0,0,0,0.6)';
+    ctx.roundRect ? ctx.roundRect(10, 10, 150, 75, 6) : null;
+    ctx.fillRect(10, 10, 150, 75);
+
+    ctx.fillStyle = '#fff';
+    ctx.font = '12px monospace';
+    ctx.fillText('FUEL', 20, 28);
+    ctx.fillStyle = fuel > 20 ? '#4c4' : '#c44';
+    ctx.fillRect(65, 18, fuel * 0.6, 8);
+    ctx.strokeStyle = '#888';
+    ctx.lineWidth = 1;
+    ctx.strokeRect(65, 18, 60, 8);
+
+    ctx.fillStyle = '#fff';
+    ctx.fillText('SPD ' + Math.sqrt(rocket.vx ** 2 + rocket.vy ** 2).toFixed(1), 20, 48);
+    ctx.fillText('ANG ' + (rocket.angle * 180 / Math.PI).toFixed(1) + '\u00b0', 20, 65);
+
+    // message
+    if (won) {
+      ctx.fillStyle = 'rgba(0,0,0,0.5)';
+      ctx.fillRect(0, 0, W, H);
+      ctx.fillStyle = '#4c4';
+      ctx.font = 'bold 40px sans-serif';
+      ctx.textAlign = 'center';
+      ctx.fillText('LANDED', W / 2, H / 2 - 10);
+      ctx.fillStyle = '#aaa';
+      ctx.font = '16px sans-serif';
+      ctx.fillText('press R to restart', W / 2, H / 2 + 30);
+      ctx.textAlign = 'left';
+    } else if (gameOver) {
+      ctx.fillStyle = 'rgba(0,0,0,0.5)';
+      ctx.fillRect(0, 0, W, H);
+      ctx.fillStyle = '#c44';
+      ctx.font = 'bold 40px sans-serif';
+      ctx.textAlign = 'center';
+      ctx.fillText('CRASHED', W / 2, H / 2 - 10);
+      ctx.fillStyle = '#aaa';
+      ctx.font = '16px sans-serif';
+      ctx.fillText('press R to restart', W / 2, H / 2 + 30);
+      ctx.textAlign = 'left';
+    }
+  }
+
+  function loop() {
+    update();
+    draw();
+    requestAnimationFrame(loop);
+  }
+
+  window.keys = {};
+  window.addEventListener('keydown', e => {
+    window.keys[e.code] = true;
+    if ((e.code === 'Space' || e.code === 'ArrowUp') && !won && !gameOver) e.preventDefault();
+    if (e.code === 'KeyR') init();
+  });
+  window.addEventListener('keyup', e => {
+    window.keys[e.code] = false;
+  });
+
+  init();
+  loop();
+</script>
