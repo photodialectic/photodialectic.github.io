@@ -41,7 +41,7 @@ title: Cryptogram
   .alpha-row .key:hover { border-color: #6af; }
   .alpha-row .key.used { opacity: 0.25; pointer-events: none; }
   .alpha-row .key.highlight { border-color: #6af; background: rgba(102,170,255,0.15); }
-  .alpha-row .key.solved { border-color: #4c4; color: #4c4; }
+
 
   .alpha-label { text-align: center; color: #555; font-size: 0.7rem; margin-top: 0.25rem; letter-spacing: 1px; }
 
@@ -105,12 +105,13 @@ title: Cryptogram
 </div>
 
 <script>
-  let puzzle = { plain: '', tokens: [], types: [], cipherLetters: [], cipherSet: new Set() };
+  let puzzle = { plain: '', tokens: [], types: [], cipherLetters: [], cipherSet: new Set(), orderedCiphers: [] };
   let mapping = {}; // plain -> cipher
   let rev = {};    // cipher -> plain
   let user = {};   // cipher -> plain (user guesses)
   let selected = null;
   let hintText = '';
+  let selectedIdx = -1;
 
   function shuffle(s) {
     const a = s.split('');
@@ -164,11 +165,16 @@ title: Cryptogram
     }
 
     const cipherSet = new Set(Object.values(mapping));
+    const orderedCiphers = [];
+    for (const t of tokens) {
+      if (cipherSet.has(t) && !orderedCiphers.includes(t)) orderedCiphers.push(t);
+    }
     user = {};
     for (const c of cipherSet) user[c] = null;
     selected = null;
+    selectedIdx = -1;
 
-    puzzle = { plain, tokens, types, cipherLetters: [...cipherSet], cipherSet };
+    puzzle = { plain, tokens, types, cipherLetters: [...cipherSet], cipherSet, orderedCiphers };
     render();
     renderAlphabet();
     updateSolved();
@@ -198,14 +204,27 @@ title: Cryptogram
       if (p) rev[c] = p;
     }
     selected = null;
+    selectedIdx = -1;
     render();
     renderAlphabet();
     updateSolved();
   }
 
+  function selectCipher(idx) {
+    if (idx < 0 || idx >= puzzle.orderedCiphers.length) return;
+    if (selectedIdx === idx) { clearSelection(); return; }
+    selectedIdx = idx;
+    selected = puzzle.orderedCiphers[idx];
+    render();
+    renderAlphabet();
+    document.getElementById('hint-area').textContent = 'press a letter key to map, \u2190\u2192 to navigate';
+  }
+
   function clearSelection() {
     selected = null;
+    selectedIdx = -1;
     render();
+    renderAlphabet();
     document.getElementById('hint-area').textContent = hintText || '';
   }
 
@@ -214,10 +233,10 @@ title: Cryptogram
     if (unsolved.length === 0) return;
     const [plain, cipher] = unsolved[Math.floor(Math.random() * unsolved.length)];
     assignPlain(cipher, plain);
-    selected = cipher;
-    render();
-    renderAlphabet();
-    updateSolved();
+    // reselect this cipher so user sees what was revealed
+    const idx = puzzle.orderedCiphers.indexOf(cipher);
+    if (idx !== -1) selectCipher(idx);
+    else { render(); renderAlphabet(); updateSolved(); }
   }
 
   function updateSolved() {
@@ -252,11 +271,8 @@ title: Cryptogram
         if (guess) tile.classList.add('solved');
         if (selected === tok) tile.classList.add('selected');
         tile.addEventListener('click', () => {
-          if (selected === tok) { clearSelection(); return; }
-          selected = tok;
-          render();
-          renderAlphabet();
-          document.getElementById('hint-area').textContent = 'pick a plain letter below (or press a key)';
+          const idx = puzzle.orderedCiphers.indexOf(tok);
+          selectCipher(idx);
         });
       }
       tile.appendChild(plainSpan);
@@ -281,9 +297,6 @@ title: Cryptogram
       // mark used letters
       if (used.has(l)) key.classList.add('used');
 
-      // mark if this letter is the actual answer for selected cipher
-      if (selected && rev[selected] === l) key.classList.add('solved');
-
       key.addEventListener('click', () => {
         if (selected) assignPlain(selected, l);
       });
@@ -292,9 +305,22 @@ title: Cryptogram
   }
 
   document.addEventListener('keydown', e => {
+    if (e.key === 'ArrowLeft' || e.key === 'ArrowRight') {
+      if (puzzle.orderedCiphers.length === 0) return;
+      if (selectedIdx === -1) { selectCipher(0); e.preventDefault(); return; }
+      const dir = e.key === 'ArrowLeft' ? -1 : 1;
+      const next = (selectedIdx + dir + puzzle.orderedCiphers.length) % puzzle.orderedCiphers.length;
+      selectCipher(next);
+      e.preventDefault();
+      return;
+    }
     if (e.key >= 'a' && e.key <= 'z' && selected) {
       assignPlain(selected, e.key.toUpperCase());
       e.preventDefault();
+      // auto-advance to next unsolved cipher
+      const nextUnsolved = puzzle.orderedCiphers.findIndex((c, i) => i !== selectedIdx && !user[c]);
+      if (nextUnsolved !== -1) selectCipher(nextUnsolved);
+      return;
     }
     if (e.key === 'Backspace' && selected) {
       user[selected] = null;
