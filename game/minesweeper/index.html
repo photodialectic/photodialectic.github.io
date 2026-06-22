@@ -1,0 +1,262 @@
+---
+layout: default
+title: Minesweeper
+---
+
+<style>
+  .game-wrap { text-align: center; margin: 2rem 0; }
+  .board { display: inline-grid; gap: 1px; background: #333; border: 2px solid #444; border-radius: 4px; user-select: none; }
+  .cell {
+    width: 32px; height: 32px; display: flex; align-items: center; justify-content: center;
+    font: 700 14px/1 monospace; cursor: pointer; background: #1a1a2e; transition: background 0.1s;
+  }
+  .cell:hover { background: #2a2a4e; }
+  .cell.revealed { background: #0d0d1a; cursor: default; }
+  .cell.revealed:hover { background: #0d0d1a; }
+  .cell.flag { color: #f44; }
+  .cell.mine { background: #a22; }
+  .cell.n1 { color: #6af; }
+  .cell.n2 { color: #4c4; }
+  .cell.n3 { color: #f44; }
+  .cell.n4 { color: #84f; }
+  .cell.n5 { color: #c40; }
+  .cell.n6 { color: #0cc; }
+  .cell.n7 { color: #222; }
+  .cell.n8 { color: #888; }
+  .top-bar {
+    display: flex; justify-content: space-between; align-items: center;
+    max-width: 300px; margin: 0 auto 0.75rem; font: 14px monospace; color: #888;
+  }
+  .top-bar button {
+    background: #1a1a1a; border: 1px solid #444; color: #ccc; border-radius: 4px;
+    padding: 4px 12px; cursor: pointer; font: 14px monospace;
+  }
+  .top-bar button:hover { border-color: #6af; }
+  .difficulty { margin-top: 1rem; }
+  .difficulty button {
+    background: #1a1a1a; border: 1px solid #333; color: #888; border-radius: 4px;
+    padding: 4px 10px; cursor: pointer; font: 12px monospace; margin: 0 2px;
+  }
+  .difficulty button.active { border-color: #6af; color: #ccc; }
+  .difficulty button:hover { border-color: #6af; }
+  .msg { text-align: center; font: 14px monospace; color: #888; margin-top: 0.5rem; }
+</style>
+
+<div class="game-wrap">
+  <div class="top-bar">
+    <span id="mine-count">10</span>
+    <button id="reset">&#x1f642;</button>
+    <span id="timer">000</span>
+  </div>
+  <div id="board" class="board"></div>
+  <div class="difficulty">
+    <button data-easy class="active">easy</button>
+    <button data-medium>medium</button>
+    <button data-hard>hard</button>
+  </div>
+  <div class="msg" id="msg"></div>
+</div>
+
+<script>
+  const DIFFICULTIES = {
+    easy: { rows: 9, cols: 9, mines: 10 },
+    medium: { rows: 12, cols: 16, mines: 40 },
+    hard: { rows: 16, cols: 30, mines: 99 },
+  };
+
+  let state = {};
+  let timerInterval = null;
+  let difficulty = 'easy';
+  let gameover = false;
+
+  const boardEl = document.getElementById('board');
+  const mineCountEl = document.getElementById('mine-count');
+  const timerEl = document.getElementById('timer');
+  const msgEl = document.getElementById('msg');
+  const resetBtn = document.getElementById('reset');
+
+  function initGame(diff) {
+    difficulty = diff;
+    const cfg = DIFFICULTIES[diff];
+    state = {
+      rows: cfg.rows,
+      cols: cfg.cols,
+      mines: cfg.mines,
+      grid: Array.from({ length: cfg.rows }, () => Array.from({ length: cfg.cols }, () => ({
+        mine: false,
+        revealed: false,
+        flagged: false,
+        adjacent: 0,
+      }))),
+      firstClick: true,
+      minesPlaced: false,
+      flags: 0,
+      revealedCount: 0,
+      won: false,
+      lost: false,
+    };
+    gameover = false;
+    clearInterval(timerInterval);
+    timerInterval = null;
+    timerEl.textContent = '000';
+    msgEl.textContent = '';
+    render();
+    updateCounts();
+  }
+
+  function placeMines(excludeR, excludeC) {
+    const { rows, cols, mines, grid } = state;
+    let placed = 0;
+    while (placed < mines) {
+      const r = Math.floor(Math.random() * rows);
+      const c = Math.floor(Math.random() * cols);
+      if (grid[r][c].mine) continue;
+      if (Math.abs(r - excludeR) <= 1 && Math.abs(c - excludeC) <= 1) continue;
+      grid[r][c].mine = true;
+      placed++;
+    }
+    for (let r = 0; r < rows; r++) {
+      for (let c = 0; c < cols; c++) {
+        if (grid[r][c].mine) continue;
+        let count = 0;
+        forEachNeighbor(r, c, (nr, nc) => { if (grid[nr][nc].mine) count++; });
+        grid[r][c].adjacent = count;
+      }
+    }
+    state.minesPlaced = true;
+  }
+
+  function forEachNeighbor(r, c, fn) {
+    for (let dr = -1; dr <= 1; dr++) {
+      for (let dc = -1; dc <= 1; dc++) {
+        if (dr === 0 && dc === 0) continue;
+        const nr = r + dr, nc = c + dc;
+        if (nr >= 0 && nr < state.rows && nc >= 0 && nc < state.cols) fn(nr, nc);
+      }
+    }
+  }
+
+  function reveal(r, c) {
+    if (gameover) return;
+    const cell = state.grid[r][c];
+    if (cell.revealed || cell.flagged) return;
+
+    if (state.firstClick) {
+      state.firstClick = false;
+      placeMines(r, c);
+      timerInterval = setInterval(() => {
+        const val = parseInt(timerEl.textContent) || 0;
+        timerEl.textContent = String(val + 1).padStart(3, '0');
+      }, 1000);
+    }
+
+    if (cell.mine) {
+      cell.revealed = true;
+      gameover = true;
+      state.lost = true;
+      clearInterval(timerInterval);
+      revealAllMines();
+      render();
+      msgEl.textContent = 'you hit a mine.';
+      return;
+    }
+
+    cell.revealed = true;
+    state.revealedCount++;
+
+    if (cell.adjacent === 0) {
+      forEachNeighbor(r, c, (nr, nc) => {
+        if (!state.grid[nr][nc].revealed && !state.grid[nr][nc].flagged) reveal(nr, nc);
+      });
+    }
+
+    checkWin();
+    render();
+  }
+
+  function toggleFlag(r, c) {
+    if (gameover) return;
+    const cell = state.grid[r][c];
+    if (cell.revealed) return;
+
+    cell.flagged = !cell.flagged;
+    state.flags += cell.flagged ? 1 : -1;
+    updateCounts();
+    render();
+  }
+
+  function revealAllMines() {
+    for (let r = 0; r < state.rows; r++) {
+      for (let c = 0; c < state.cols; c++) {
+        if (state.grid[r][c].mine) state.grid[r][c].revealed = true;
+      }
+    }
+  }
+
+  function checkWin() {
+    const totalSafe = state.rows * state.cols - state.mines;
+    if (state.revealedCount === totalSafe) {
+      gameover = true;
+      state.won = true;
+      clearInterval(timerInterval);
+      msgEl.textContent = 'you win!';
+      for (let r = 0; r < state.rows; r++) {
+        for (let c = 0; c < state.cols; c++) {
+          if (state.grid[r][c].mine && !state.grid[r][c].flagged) {
+            state.grid[r][c].flagged = true;
+            state.flags++;
+          }
+        }
+      }
+      updateCounts();
+      render();
+    }
+  }
+
+  function updateCounts() {
+    mineCountEl.textContent = state.mines - state.flags;
+  }
+
+  function render() {
+    const { rows, cols } = state;
+    boardEl.style.gridTemplateColumns = `repeat(${cols}, 32px)`;
+    boardEl.innerHTML = '';
+    for (let r = 0; r < rows; r++) {
+      for (let c = 0; c < cols; c++) {
+        const cell = state.grid[r][c];
+        const div = document.createElement('div');
+        div.className = 'cell';
+        if (cell.revealed) {
+          div.classList.add('revealed');
+          if (cell.mine) {
+            div.classList.add('mine');
+            div.textContent = '\uD83D\uDCA3';
+          } else if (cell.adjacent > 0) {
+            div.classList.add('n' + cell.adjacent);
+            div.textContent = cell.adjacent;
+          }
+        } else if (cell.flagged) {
+          div.classList.add('flag');
+          div.textContent = '\u2691';
+        }
+        div.dataset.r = r;
+        div.dataset.c = c;
+        div.addEventListener('click', () => reveal(r, c));
+        div.addEventListener('contextmenu', e => { e.preventDefault(); toggleFlag(r, c); });
+        boardEl.appendChild(div);
+      }
+    }
+  }
+
+  document.querySelectorAll('.difficulty button').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.difficulty button').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      initGame(btn.dataset.easy ? 'easy' : btn.dataset.medium ? 'medium' : 'hard');
+    });
+  });
+
+  resetBtn.addEventListener('click', () => initGame(difficulty));
+
+  initGame('easy');
+</script>
