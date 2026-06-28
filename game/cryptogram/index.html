@@ -461,6 +461,43 @@ title: Cryptogram
     if (solved === total && total > 0) startConfetti();
   };
 
+  // Hidden input for mobile keyboard
+  const hiddenInput = document.createElement('input');
+  hiddenInput.setAttribute('autocomplete', 'off');
+  hiddenInput.setAttribute('autocorrect', 'off');
+  hiddenInput.setAttribute('autocapitalize', 'off');
+  hiddenInput.setAttribute('spellcheck', 'false');
+  hiddenInput.style.cssText = 'position:fixed;left:-9999px;top:-9999px;width:1px;height:1px;opacity:0;pointer-events:none';
+  document.body.appendChild(hiddenInput);
+
+  hiddenInput.addEventListener('input', () => {
+    const val = hiddenInput.value;
+    if (val.length > 0) {
+      const ch = val[val.length - 1].toUpperCase();
+      if (ch >= 'A' && ch <= 'Z' && selected) {
+        assignPlain(selected, ch);
+      }
+      hiddenInput.value = '';
+    }
+  });
+
+  hiddenInput.addEventListener('blur', () => {
+    // don't clear selection; user may tap outside
+  });
+
+  // Wrap selectCipher to focus the hidden input (brings up mobile keyboard)
+  const origSelectCipher = selectCipher;
+  selectCipher = function(idx) {
+    origSelectCipher(idx);
+    if (selected) hiddenInput.focus();
+  };
+
+  const origClearSelection = clearSelection;
+  clearSelection = function() {
+    origClearSelection();
+    hiddenInput.blur();
+  };
+
   const d = getData();
   loadPuzzle(d);
   setData(d);
