@@ -56,7 +56,7 @@ docker run --rm \
     jekyll serve --host 0.0.0.0 --livereload
 ```
 
-Then visit [](http://localhost:4000)
+Then visit [localhost:4000](http://localhost:4000)
 
 Alternatively, if you have Jekyll installed locally:
 
