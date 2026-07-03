@@ -1,1 +1,25 @@
+# Jekyll build output
+_site/
+.sass-cache/
+.jekyll-cache/
+.jekyll-metadata
+
+# Bundler
+Gemfile.lock
+vendor/
+.bundle/
+
+# macOS
 .DS_Store
+
+# Editor/IDE
+*.swp
+*.swo
+*~
+.vscode/
+.idea/
+
+# Node (if using any Node tools)
+node_modules/
+npm-debug.log
+yarn-error.log
