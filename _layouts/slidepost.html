@@ -450,23 +450,29 @@
           rootMargin: "-10% 0px -10% 0px",
         },
       );
-      
+
       // Keyboard navigation
       document.addEventListener("keydown", (e) => {
         if (e.key === " " || e.key === "ArrowDown") {
           e.preventDefault();
           const currentIndex = Array.from(navItems).findIndex((item) =>
-            item.classList.contains("active")
+            item.classList.contains("active"),
           );
           const nextIndex = Math.min(currentIndex + 1, slides.length - 1);
-          slides[nextIndex].scrollIntoView({ behavior: "smooth", block: "center" });
+          slides[nextIndex].scrollIntoView({
+            behavior: "smooth",
+            block: "center",
+          });
         } else if (e.key === "ArrowUp") {
           e.preventDefault();
           const currentIndex = Array.from(navItems).findIndex((item) =>
-            item.classList.contains("active")
+            item.classList.contains("active"),
           );
           const prevIndex = Math.max(currentIndex - 1, 0);
-          slides[prevIndex].scrollIntoView({ behavior: "smooth", block: "center" });
+          slides[prevIndex].scrollIntoView({
+            behavior: "smooth",
+            block: "center",
+          });
         }
       });
 
