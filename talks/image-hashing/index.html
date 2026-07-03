@@ -46,7 +46,12 @@ description: A visual guide to perceptual image hashing using the average hash m
       }
     </style>
     <div class="intro-demo">
-      <canvas id="introCanvas" width="320" height="240"></canvas>
+      <canvas
+        id="introCanvas"
+        width="320"
+        height="240"
+        style="max-width: 100%; height: auto"
+      ></canvas>
       <div class="intro-stage" id="introStage">Image</div>
       <div class="intro-hash" id="introHash">...</div>
     </div>
@@ -116,7 +121,12 @@ description: A visual guide to perceptual image hashing using the average hash m
       }
     </style>
     <div class="resize-container">
-      <canvas id="resizeCanvas" width="320" height="320"></canvas>
+      <canvas
+        id="resizeCanvas"
+        width="320"
+        height="320"
+        style="max-width: 100%; height: auto"
+      ></canvas>
       <div id="avgDisplay">Calculating...</div>
     </div>
   </div>
@@ -161,6 +171,35 @@ description: A visual guide to perceptual image hashing using the average hash m
         background: var(--card-bg);
         min-width: 250px;
       }
+
+      @media (max-width: 767px) {
+        .average-container {
+          gap: 1rem;
+        }
+        .scale-bar {
+          width: 150px;
+        }
+        #averageValue {
+          font-size: 0.9rem;
+          padding: 0.6rem 0.8rem;
+          min-width: 200px;
+        }
+      }
+
+      @media (max-width: 400px) {
+        .scale-bar {
+          width: 120px;
+        }
+        #averageValue {
+          font-size: 0.8rem;
+          padding: 0.5rem;
+          min-width: 0;
+          max-width: 100%;
+        }
+        .luminance-scale {
+          font-size: 0.7rem;
+        }
+      }
     </style>
     <div class="average-container">
       <div class="luminance-scale">
@@ -168,7 +207,12 @@ description: A visual guide to perceptual image hashing using the average hash m
         <div class="scale-bar"></div>
         <span>255</span>
       </div>
-      <canvas id="averageCanvas" width="320" height="320"></canvas>
+      <canvas
+        id="averageCanvas"
+        width="320"
+        height="320"
+        style="max-width: 100%; height: auto"
+      ></canvas>
       <div id="averageValue">Calculating...</div>
     </div>
   </div>
@@ -201,9 +245,34 @@ description: A visual guide to perceptual image hashing using the average hash m
         background: var(--card-bg);
         min-width: 250px;
       }
+
+      @media (max-width: 767px) {
+        .bits-conversion-container {
+          gap: 1rem;
+        }
+        #bitsValue {
+          font-size: 0.9rem;
+          padding: 0.6rem 0.8rem;
+          min-width: 200px;
+        }
+      }
+
+      @media (max-width: 400px) {
+        #bitsValue {
+          font-size: 0.8rem;
+          padding: 0.5rem;
+          min-width: 0;
+          max-width: 100%;
+        }
+      }
     </style>
     <div class="bits-conversion-container">
-      <canvas id="bitsCanvas" width="320" height="320"></canvas>
+      <canvas
+        id="bitsCanvas"
+        width="320"
+        height="320"
+        style="max-width: 100%; height: auto"
+      ></canvas>
       <div id="bitsValue">Converting...</div>
     </div>
   </div>
@@ -277,6 +346,50 @@ description: A visual guide to perceptual image hashing using the average hash m
         min-width: 350px;
         text-align: center;
       }
+
+      @media (max-width: 767px) {
+        .hash-display {
+          gap: 1.5rem;
+        }
+        .hash-grid {
+          grid-template-columns: repeat(8, 25px);
+          gap: 2px;
+        }
+        .hash-cell {
+          width: 25px;
+          height: 25px;
+          font-size: 0.6rem;
+        }
+        .hash-hex {
+          font-size: 1rem;
+          min-width: 0;
+          max-width: 100%;
+          padding: 0.75rem;
+          word-break: break-all;
+        }
+        .hash-nibble {
+          font-size: 0.85rem;
+        }
+      }
+
+      @media (max-width: 400px) {
+        .hash-grid {
+          grid-template-columns: repeat(8, 20px);
+          gap: 2px;
+        }
+        .hash-cell {
+          width: 20px;
+          height: 20px;
+          font-size: 0.5rem;
+        }
+        .hash-hex {
+          font-size: 0.85rem;
+          padding: 0.5rem;
+        }
+        .hash-nibble {
+          font-size: 0.75rem;
+        }
+      }
     </style>
     <div class="hash-display">
       <div class="hash-grid" id="finalBitsGrid"></div>
@@ -316,67 +429,68 @@ description: A visual guide to perceptual image hashing using the average hash m
   </div>
   <div class="slide-animation">
     <style>
-      .methods-flow {
-        display: flex;
-        flex-direction: column;
-        gap: 2rem;
-        align-items: center;
-        justify-content: center;
-        padding: 2rem;
+      .methods-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 1rem;
+        padding: 1.5rem;
+        max-width: 800px;
+        margin: 0 auto;
       }
       .method-card {
-        width: 100%;
-        max-width: 350px;
-        padding: 1.5rem;
+        padding: 1.25rem;
         border: 1px solid var(--border);
         background: var(--card-bg);
       }
+
+      @media (max-width: 767px) {
+        .methods-grid {
+          grid-template-columns: 1fr;
+          padding: 1rem;
+          gap: 0.75rem;
+        }
+        .method-card {
+          padding: 1rem;
+        }
+        .method-steps {
+          font-size: 0.75rem;
+        }
+      }
       .method-name {
-        font-size: 1.1rem;
+        font-size: 1rem;
         font-weight: bold;
         color: var(--text-heading);
         margin-bottom: 0.5rem;
       }
       .method-steps {
         font-family: monospace;
-        font-size: 0.85rem;
+        font-size: 0.8rem;
         color: var(--text-muted);
-        line-height: 1.8;
-      }
-      .method-arrow {
-        font-size: 1.5rem;
-        color: var(--text-subtle);
+        line-height: 1.6;
       }
     </style>
-    <div class="methods-flow">
+    <div class="methods-grid">
       <div class="method-card">
         <div class="method-name">Average Hash</div>
         <div class="method-steps">Grayscale → 8×8 → Compare to average</div>
       </div>
-      <div class="method-arrow">↓</div>
       <div class="method-card">
         <div class="method-name">pHash</div>
         <div class="method-steps">
           Grayscale → DCT → Low frequencies → Threshold
         </div>
       </div>
-      <div class="method-arrow">↓</div>
       <div class="method-card">
         <div class="method-name">dHash</div>
         <div class="method-steps">
           Grayscale → 9×8 → Compare adjacent pixels
         </div>
       </div>
-      <div class="method-arrow">↓</div>
-      <div
-        style="
-          text-align: center;
-          font-family: monospace;
-          font-size: 1rem;
-          color: var(--text-heading);
-        "
-      >
-        All produce → <strong>64 bits</strong>
+      <div class="method-card">
+        <div class="method-name">wHash</div>
+        <div class="method-steps">
+          Grayscale → Wavelet transform → Threshold
+        </div>
       </div>
     </div>
   </div>
@@ -406,6 +520,17 @@ description: A visual guide to perceptual image hashing using the average hash m
         align-items: center;
         justify-content: center;
       }
+
+      @media (max-width: 767px) {
+        .hamming-demo {
+          gap: 1rem;
+          padding: 0;
+        }
+        .hamming-result {
+          font-size: 0.95rem;
+          padding: 0.5rem 0.75rem;
+        }
+      }
       .hamming-grids {
         display: flex;
         gap: 2rem;
@@ -419,11 +544,41 @@ description: A visual guide to perceptual image hashing using the average hash m
         border: 1px solid var(--border);
         background: var(--card-bg);
       }
+
+      @media (max-width: 767px) {
+        .hamming-grids {
+          flex-direction: column;
+          gap: 1rem;
+        }
+        #hammingCanvas1,
+        #hammingCanvas2 {
+          width: 200px;
+          height: 200px;
+        }
+      }
+
+      @media (max-width: 400px) {
+        #hammingCanvas1,
+        #hammingCanvas2 {
+          width: 160px;
+          height: 160px;
+        }
+      }
     </style>
     <div class="hamming-demo">
       <div class="hamming-grids">
-        <canvas id="hammingCanvas1" width="240" height="240"></canvas>
-        <canvas id="hammingCanvas2" width="240" height="240"></canvas>
+        <canvas
+          id="hammingCanvas1"
+          width="240"
+          height="240"
+          style="max-width: 100%; height: auto"
+        ></canvas>
+        <canvas
+          id="hammingCanvas2"
+          width="240"
+          height="240"
+          style="max-width: 100%; height: auto"
+        ></canvas>
       </div>
       <div class="hamming-result" id="hammingDistance">
         Hamming Distance: <strong>4</strong>
@@ -460,6 +615,13 @@ description: A visual guide to perceptual image hashing using the average hash m
         justify-content: center;
         padding: 2rem;
       }
+
+      @media (max-width: 767px) {
+        .query-demo {
+          padding: 1rem 0.5rem;
+          gap: 1rem;
+        }
+      }
       .query-example {
         width: 100%;
         max-width: 550px;
@@ -469,16 +631,63 @@ description: A visual guide to perceptual image hashing using the average hash m
         border: 1px solid var(--border);
         padding: 1.5rem;
         line-height: 1.6;
+        overflow-x: auto;
       }
       .query-line {
         margin-bottom: 0.3rem;
         color: var(--text-muted);
+        white-space: nowrap;
       }
       .query-indent {
         padding-left: 2rem;
       }
       .query-indent-2 {
         padding-left: 4rem;
+      }
+
+      @media (max-width: 767px) {
+        .query-example {
+          font-size: 0.75rem;
+          padding: 1rem;
+        }
+        .query-indent {
+          padding-left: 1rem;
+        }
+        .query-indent-2 {
+          padding-left: 2rem;
+        }
+        .bit-operation {
+          font-size: 0.8rem;
+          padding: 0.75rem;
+        }
+      }
+
+      @media (max-width: 400px) {
+        .query-demo {
+          padding: 0.5rem 0.25rem;
+        }
+        .query-example {
+          font-size: 0.65rem;
+          padding: 0.75rem;
+          max-width: 100%;
+        }
+        .query-indent {
+          padding-left: 0.5rem;
+        }
+        .query-indent-2 {
+          padding-left: 1rem;
+        }
+        .bit-operation {
+          font-size: 0.7rem;
+          padding: 0.5rem;
+        }
+        .bit-label {
+          width: 70px;
+          font-size: 0.65rem;
+        }
+        .bit-value {
+          font-size: 0.65rem;
+        }
       }
       .query-keyword {
         color: #4444ff;
@@ -494,12 +703,28 @@ description: A visual guide to perceptual image hashing using the average hash m
         max-width: 350px;
         line-height: 1.6;
       }
+
+      @media (max-width: 767px) {
+        .query-explanation {
+          font-size: 0.8rem;
+          max-width: 100%;
+          padding: 0 0.5rem;
+        }
+      }
+
+      @media (max-width: 400px) {
+        .query-explanation {
+          font-size: 0.7rem;
+          padding: 0 0.25rem;
+        }
+      }
       .bit-operation {
         display: flex;
         flex-direction: column;
         gap: 0.5rem;
         font-family: monospace;
         font-size: 0.9rem;
+        overflow-x: auto;
         padding: 1rem;
         background: var(--card-bg);
         border: 1px solid var(--border);
@@ -576,8 +801,11 @@ description: A visual guide to perceptual image hashing using the average hash m
     if (!canvas) return;
 
     const ctx = canvas.getContext("2d");
+    if (!ctx) return;
+
     const stageDiv = document.getElementById("introStage");
     const hashDiv = document.getElementById("introHash");
+    if (!stageDiv || !hashDiv) return;
 
     let stage = 0;
     let progress = 0;
@@ -745,14 +973,13 @@ description: A visual guide to perceptual image hashing using the average hash m
         if (hashDiv) hashDiv.textContent = hash;
       }
 
-      requestAnimationFrame(animate);
+      if (introAnimationRunning) {
+        requestAnimationFrame(animate);
+      }
     }
 
     animate();
   }
-
-  // Start intro animation
-  animateIntro();
 
   // Image processing implementation
   const imageUrl = "mpls.jpg";
@@ -1272,8 +1499,27 @@ description: A visual guide to perceptual image hashing using the average hash m
     const canvas2 = document.getElementById("hammingCanvas2");
     if (!canvas1 || !canvas2) return;
 
+    // Adjust canvas size for mobile
+    const width = window.innerWidth;
+    let canvasSize;
+    if (width <= 400) {
+      canvasSize = 160;
+    } else if (width <= 767) {
+      canvasSize = 200;
+    } else {
+      canvasSize = 240;
+    }
+    const isMobile = width <= 767;
+    const cellSize = canvasSize / 8;
+
+    canvas1.width = canvasSize;
+    canvas1.height = canvasSize;
+    canvas2.width = canvasSize;
+    canvas2.height = canvasSize;
+
     const ctx1 = canvas1.getContext("2d");
     const ctx2 = canvas2.getContext("2d");
+    if (!ctx1 || !ctx2) return;
 
     // Create two similar hashes with exactly 4 bits different
     const hash1 = [
@@ -1296,12 +1542,10 @@ description: A visual guide to perceptual image hashing using the average hash m
 
     const diffIndices = [10, 25, 38, 53];
 
-    const cellSize = 30;
-
     let animationPhase = 0; // 0 = showing normal, 1 = highlighting diffs
 
     function drawGrid(ctx, hash, highlightDiffs) {
-      ctx.clearRect(0, 0, 240, 240);
+      ctx.clearRect(0, 0, canvasSize, canvasSize);
 
       for (let y = 0; y < 8; y++) {
         for (let x = 0; x < 8; x++) {
@@ -1331,7 +1575,8 @@ description: A visual guide to perceptual image hashing using the average hash m
           } else {
             ctx.fillStyle = bit === 1 ? "#000000" : "#ffffff";
           }
-          ctx.font = "bold 14px monospace";
+          const fontSize = isMobile ? 12 : 14;
+          ctx.font = `bold ${fontSize}px monospace`;
           ctx.textAlign = "center";
           ctx.textBaseline = "middle";
           ctx.fillText(
@@ -1343,22 +1588,98 @@ description: A visual guide to perceptual image hashing using the average hash m
       }
     }
 
+    // Check if mobile for performance
+    const animationDelay = isMobile ? 2000 : 1500;
+
     function animate() {
+      if (!hammingAnimationRunning) return; // Stop if not visible
+
       const highlightDiffs = animationPhase === 1;
 
       drawGrid(ctx1, hash1, highlightDiffs);
       drawGrid(ctx2, hash2, highlightDiffs);
 
-      // Toggle phase every 1.5 seconds
+      // Toggle phase
       setTimeout(() => {
         animationPhase = (animationPhase + 1) % 2;
         animate();
-      }, 1500);
+      }, animationDelay);
     }
 
     animate();
   }
 
-  // Start hamming distance animation
-  processHammingDistance();
+  // Only start animations when slides are visible
+  let hammingAnimationRunning = false;
+  let introAnimationRunning = false;
+
+  function startHammingIfVisible() {
+    try {
+      const hammingSlide = document
+        .querySelector("#hammingCanvas1")
+        ?.closest(".slide");
+      if (!hammingSlide) return;
+
+      const observer = new IntersectionObserver(
+        (entries) => {
+          entries.forEach((entry) => {
+            if (entry.isIntersecting && !hammingAnimationRunning) {
+              hammingAnimationRunning = true;
+              try {
+                processHammingDistance();
+              } catch (e) {
+                console.error("Hamming animation error:", e);
+              }
+            }
+          });
+        },
+        { threshold: 0.1 },
+      );
+
+      observer.observe(hammingSlide);
+    } catch (e) {
+      console.error("Hamming observer error:", e);
+    }
+  }
+
+  function startIntroIfVisible() {
+    try {
+      const introSlide = document
+        .querySelector("#introCanvas")
+        ?.closest(".slide");
+      if (!introSlide) return;
+
+      const observer = new IntersectionObserver(
+        (entries) => {
+          entries.forEach((entry) => {
+            if (entry.isIntersecting && !introAnimationRunning) {
+              introAnimationRunning = true;
+              try {
+                animateIntro();
+              } catch (e) {
+                console.error("Intro animation error:", e);
+              }
+            }
+          });
+        },
+        { threshold: 0.1 },
+      );
+
+      observer.observe(introSlide);
+    } catch (e) {
+      console.error("Intro observer error:", e);
+    }
+  }
+
+  // Start observers after DOM is fully loaded
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", function () {
+      startHammingIfVisible();
+      startIntroIfVisible();
+    });
+  } else {
+    // DOM is already loaded
+    startHammingIfVisible();
+    startIntroIfVisible();
+  }
 </script>
