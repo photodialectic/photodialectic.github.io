@@ -1,0 +1,382 @@
+---
+layout: default
+title: XSS Game - Level 2
+---
+
+<style>
+  .level-wrap { max-width: 780px; margin: 0 auto; }
+  .level-header { margin-bottom: 2rem; }
+  .level-header h1 { font-size: 1.75rem; margin-bottom: 0.5rem; }
+  .level-header .breadcrumb { font-size: 0.85rem; color: var(--text-muted); margin-bottom: 1rem; }
+  .level-header .breadcrumb a { color: var(--text-muted); }
+  
+  .mission-box {
+    background: var(--card-bg);
+    border: 1px solid var(--border);
+    padding: 1.5rem;
+    margin-bottom: 2rem;
+  }
+  
+  .mission-box h2 {
+    font-size: 1.1rem;
+    font-weight: 400;
+    margin-bottom: 0.75rem;
+    color: var(--text-heading);
+  }
+  
+  .mission-box p {
+    font-size: 0.9rem;
+    color: var(--text-muted);
+    margin-bottom: 0.5rem;
+    line-height: 1.5;
+  }
+  
+  .target-frame {
+    background: var(--bg);
+    border: 1px solid var(--border);
+    padding: 2rem;
+    margin: 2rem 0;
+  }
+  
+  .target-frame h3 {
+    font-size: 1.3rem;
+    font-weight: 400;
+    margin-bottom: 1.5rem;
+    text-align: center;
+  }
+  
+  .post-form {
+    max-width: 600px;
+    margin: 0 auto 2rem;
+  }
+  
+  .post-form textarea {
+    width: 100%;
+    padding: 0.75rem;
+    border: 1px solid var(--border);
+    background: var(--card-bg);
+    color: var(--text);
+    font-size: 0.9rem;
+    font-family: inherit;
+    resize: vertical;
+    min-height: 80px;
+  }
+  
+  .post-form textarea:focus {
+    outline: none;
+    border-color: var(--text);
+  }
+  
+  .post-form button {
+    margin-top: 0.5rem;
+    padding: 0.75rem 1.5rem;
+    background: var(--card-bg);
+    border: 1px solid var(--border);
+    color: var(--text);
+    cursor: pointer;
+    font-size: 0.9rem;
+    font-family: inherit;
+    transition: opacity 0.2s;
+  }
+  
+  .post-form button:hover {
+    opacity: 0.6;
+  }
+  
+  .posts-container {
+    max-width: 600px;
+    margin: 0 auto;
+  }
+  
+  .post {
+    background: var(--card-bg);
+    border: 1px solid var(--border);
+    padding: 1rem;
+    margin-bottom: 1rem;
+  }
+  
+  .post-author {
+    font-size: 0.85rem;
+    color: var(--text-muted);
+    margin-bottom: 0.5rem;
+  }
+  
+  .post-content {
+    color: var(--text);
+    font-size: 0.9rem;
+    line-height: 1.5;
+  }
+  
+  .hints-section {
+    background: var(--card-bg);
+    border: 1px solid var(--border);
+    padding: 1.5rem;
+    margin-top: 2rem;
+  }
+  
+  .hints-section h2 {
+    font-size: 1.1rem;
+    font-weight: 400;
+    margin-bottom: 1rem;
+    color: var(--text-heading);
+  }
+  
+  .hint-toggle {
+    background: var(--card-bg);
+    border: 1px solid var(--border);
+    color: var(--text);
+    padding: 0.5rem 1rem;
+    cursor: pointer;
+    font-size: 0.85rem;
+    font-family: inherit;
+    margin-bottom: 0.5rem;
+    transition: opacity 0.2s;
+  }
+  
+  .hint-toggle:hover {
+    opacity: 0.6;
+  }
+  
+  .hint-content {
+    display: none;
+    margin-top: 0.75rem;
+    padding: 1rem;
+    background: var(--bg);
+    border-left: 2px solid var(--border);
+    font-size: 0.9rem;
+    color: var(--text-muted);
+  }
+  
+  .hint-content.show {
+    display: block;
+  }
+  
+  .source-section {
+    margin-top: 2rem;
+  }
+  
+  .source-toggle {
+    background: var(--card-bg);
+    border: 1px solid var(--border);
+    color: var(--text);
+    padding: 0.75rem 1.25rem;
+    cursor: pointer;
+    font-size: 0.9rem;
+    font-family: inherit;
+    transition: opacity 0.2s;
+  }
+  
+  .source-toggle:hover {
+    opacity: 0.6;
+  }
+  
+  .source-code {
+    display: none;
+    background: var(--card-bg);
+    border: 1px solid var(--border);
+    padding: 1.5rem;
+    margin-top: 1rem;
+    overflow-x: auto;
+  }
+  
+  .source-code.show {
+    display: block;
+  }
+  
+  .source-code pre {
+    font-family: 'Courier New', monospace;
+    font-size: 0.85rem;
+    color: var(--text);
+    line-height: 1.5;
+  }
+  
+  .nav-buttons {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 2rem;
+    padding-top: 2rem;
+    border-top: 1px solid var(--border-subtle);
+  }
+  
+  .nav-buttons a {
+    padding: 0.75rem 1.5rem;
+    background: var(--card-bg);
+    border: 1px solid var(--border);
+    color: var(--text);
+    text-decoration: none;
+    font-size: 0.9rem;
+    transition: opacity 0.2s;
+  }
+  
+  .nav-buttons a:hover {
+    opacity: 0.6;
+  }
+  
+  .success-banner {
+    display: none;
+    background: #4c4;
+    color: white;
+    padding: 1rem;
+    text-align: center;
+    margin: 2rem 0;
+    font-weight: 400;
+  }
+  
+  .success-banner.show {
+    display: block;
+  }
+  
+  @media (max-width: 640px) {
+    .level-header h1 { font-size: 1.5rem; }
+    .target-frame { padding: 1.5rem 1rem; }
+  }
+</style>
+
+<div class="level-wrap">
+  <div class="level-header">
+    <div class="breadcrumb">
+      <a href="./">XSS Game</a> / Level 2
+    </div>
+    <h1>[2/6] Level 2: Persistence</h1>
+  </div>
+  
+  <div class="mission-box">
+    <h2>Mission Description</h2>
+    <p>This level demonstrates stored (persistent) XSS where malicious scripts are saved to the server and executed every time the page is loaded.</p>
+    <p><strong>Mission Objective:</strong> Post a message that will execute JavaScript for anyone who views the page.</p>
+  </div>
+  
+  <div class="target-frame">
+    <h3>Message Board</h3>
+    <div class="post-form">
+      <textarea id="message" placeholder="Share your thoughts..."></textarea>
+      <button onclick="addPost()">Post Message</button>
+    </div>
+    <div class="posts-container" id="posts"></div>
+  </div>
+  
+  <div id="success-banner" class="success-banner">
+    ✓ Level Complete! You successfully executed a stored XSS attack.
+  </div>
+  
+  <div class="hints-section">
+    <h2>Hints</h2>
+    <button class="hint-toggle" onclick="toggleHint(1)">Show Hint 1</button>
+    <div class="hint-content" id="hint-1">
+      This is similar to Level 1, but your input is being stored. Try posting HTML tags.
+    </div>
+    
+    <button class="hint-toggle" onclick="toggleHint(2)">Show Hint 2</button>
+    <div class="hint-content" id="hint-2">
+      The vulnerability is in how posts are displayed. Each post's content is directly inserted into the page.
+    </div>
+    
+    <button class="hint-toggle" onclick="toggleHint(3)">Show Hint 3</button>
+    <div class="hint-content" id="hint-3">
+      Post this message: <code>&lt;img src=x onerror="alert('XSS')"&gt;</code>
+    </div>
+  </div>
+  
+  <div class="source-section">
+    <button class="source-toggle" onclick="toggleSource()">View Source Code</button>
+    <div class="source-code" id="source-code">
+      <pre>let posts = [];
+
+function addPost() {
+  const message = document.getElementById('message').value;
+  if (message.trim()) {
+    posts.push(message);
+    document.getElementById('message').value = '';
+    renderPosts();
+  }
+}
+
+function renderPosts() {
+  const container = document.getElementById('posts');
+  container.innerHTML = '';
+  
+  posts.forEach(post => {
+    const div = document.createElement('div');
+    div.className = 'post';
+    // VULNERABLE: Directly inserting stored content
+    div.innerHTML = `
+      &lt;div class="post-author"&gt;Anonymous&lt;/div&gt;
+      &lt;div class="post-content"&gt;${post}&lt;/div&gt;
+    `;
+    container.appendChild(div);
+  });
+}</pre>
+    </div>
+  </div>
+  
+  <div class="nav-buttons">
+    <a href="level1.html">← Previous Level</a>
+    <a href="level3.html">Next Level →</a>
+  </div>
+</div>
+
+<script>
+  let levelCompleted = false;
+  let posts = ['Welcome to the message board!', 'Feel free to share your thoughts.'];
+  
+  // Override alert to detect successful XSS
+  const originalAlert = window.alert;
+  window.alert = function(msg) {
+    if (!levelCompleted) {
+      levelCompleted = true;
+      document.getElementById('success-banner').classList.add('show');
+      
+      // Mark level as completed
+      const completed = JSON.parse(localStorage.getItem('xss-completed') || '[]');
+      if (!completed.includes(2)) {
+        completed.push(2);
+        localStorage.setItem('xss-completed', JSON.stringify(completed));
+      }
+    }
+    originalAlert.call(window, msg);
+  };
+  
+  function addPost() {
+    const message = document.getElementById('message').value;
+    if (message.trim()) {
+      posts.push(message);
+      document.getElementById('message').value = '';
+      renderPosts();
+    }
+  }
+  
+  function renderPosts() {
+    const container = document.getElementById('posts');
+    container.innerHTML = '';
+    
+    posts.forEach(post => {
+      const div = document.createElement('div');
+      div.className = 'post';
+      // VULNERABLE: Directly inserting stored content
+      div.innerHTML = `
+        <div class="post-author">Anonymous</div>
+        <div class="post-content">${post}</div>
+      `;
+      container.appendChild(div);
+      
+      // Execute any script tags (to simulate server-side rendering)
+      const scripts = div.querySelectorAll('script');
+      scripts.forEach(script => {
+        eval(script.textContent);
+      });
+    });
+  }
+  
+  function toggleHint(num) {
+    const hint = document.getElementById(`hint-${num}`);
+    hint.classList.toggle('show');
+  }
+  
+  function toggleSource() {
+    const source = document.getElementById('source-code');
+    source.classList.toggle('show');
+  }
+  
+  // Initial render
+  renderPosts();
+</script>

@@ -1,0 +1,156 @@
+---
+layout: default
+title: XSS Game
+---
+
+<style>
+  .xss-intro { max-width: 680px; margin: 0 auto 3rem; }
+  .xss-intro h1 { font-size: 2rem; margin-bottom: 1rem; }
+  .xss-intro p { margin-bottom: 1rem; }
+  .xss-intro a { text-decoration: underline; }
+  
+  .level-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1rem;
+    max-width: 680px;
+    margin: 2rem auto;
+  }
+  
+  .level-card {
+    display: block;
+    padding: 2rem 1.5rem;
+    background: var(--card-bg);
+    border: 1px solid var(--border);
+    text-decoration: none;
+    color: var(--text);
+    transition: border-color 0.2s, opacity 0.2s;
+    position: relative;
+  }
+  
+  .level-card:hover {
+    border-color: var(--text);
+    opacity: 1;
+  }
+  
+  .level-card .level-num {
+    font-size: 0.75rem;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin-bottom: 0.5rem;
+  }
+  
+  .level-card .level-title {
+    font-size: 1.1rem;
+    font-weight: 400;
+    color: var(--text-heading);
+    margin-bottom: 0.5rem;
+  }
+  
+  .level-card .level-desc {
+    font-size: 0.85rem;
+    color: var(--text-muted);
+    line-height: 1.4;
+  }
+  
+  .level-card.completed::after {
+    content: '✓';
+    position: absolute;
+    top: 1rem;
+    right: 1rem;
+    color: #4c4;
+    font-size: 1.5rem;
+  }
+  
+  .warning-box {
+    background: var(--card-bg);
+    border: 1px solid var(--border);
+    padding: 1.5rem;
+    margin-bottom: 2rem;
+    max-width: 680px;
+    margin-left: auto;
+    margin-right: auto;
+  }
+  
+  .warning-box h2 {
+    font-size: 1.2rem;
+    font-weight: 400;
+    margin-bottom: 0.75rem;
+    color: var(--text-heading);
+  }
+  
+  .warning-box p {
+    font-size: 0.9rem;
+    color: var(--text-muted);
+    margin-bottom: 0.5rem;
+  }
+  
+  @media (max-width: 640px) {
+    .xss-intro h1 { font-size: 1.5rem; }
+    .level-grid { grid-template-columns: 1fr; }
+  }
+</style>
+
+<div class="xss-intro">
+  <h1>XSS Security Game</h1>
+  
+  <div class="warning-box">
+    <h2>Educational Purpose</h2>
+    <p>This game teaches about Cross-Site Scripting (XSS) vulnerabilities in web applications. Learn to find and exploit XSS bugs to better understand how to prevent them in your own code.</p>
+    <p style="margin-top: 0.75rem; font-size: 0.85rem;">Inspired by and adapted from Google's original <a href="https://xss-game.appspot.com/" target="_blank" rel="noopener">XSS Game</a>.</p>
+  </div>
+  
+  <p>Cross-site scripting (XSS) bugs are one of the most common and dangerous types of vulnerabilities in web applications. These vulnerabilities can allow attackers to steal or modify user data in your apps.</p>
+  
+  <p>In this training program, you'll learn to find and exploit XSS bugs through 6 progressive levels. Each level presents a vulnerable application - your task is to find the vulnerability and execute JavaScript to complete the challenge.</p>
+  
+  <p><strong>Your objective:</strong> Make each level execute a JavaScript <code>alert()</code> to advance to the next level.</p>
+</div>
+
+<div class="level-grid">
+  <a href="level1.html" class="level-card" id="level-1">
+    <div class="level-num">Level 1</div>
+    <div class="level-title">Hello, XSS</div>
+    <div class="level-desc">Basic input reflection without escaping</div>
+  </a>
+  
+  <a href="level2.html" class="level-card" id="level-2">
+    <div class="level-num">Level 2</div>
+    <div class="level-title">Persistence</div>
+    <div class="level-desc">Stored XSS in a simple application</div>
+  </a>
+  
+  <a href="level3.html" class="level-card" id="level-3">
+    <div class="level-num">Level 3</div>
+    <div class="level-title">Context Matters</div>
+    <div class="level-desc">Breaking out of HTML attributes</div>
+  </a>
+  
+  <a href="level4.html" class="level-card" id="level-4">
+    <div class="level-num">Level 4</div>
+    <div class="level-title">Script Context</div>
+    <div class="level-desc">Injection in JavaScript strings</div>
+  </a>
+  
+  <a href="level5.html" class="level-card" id="level-5">
+    <div class="level-num">Level 5</div>
+    <div class="level-title">DOM-Based</div>
+    <div class="level-desc">Client-side XSS vulnerabilities</div>
+  </a>
+  
+  <a href="level6.html" class="level-card" id="level-6">
+    <div class="level-num">Level 6</div>
+    <div class="level-title">Final Challenge</div>
+    <div class="level-desc">Advanced exploitation techniques</div>
+  </a>
+</div>
+
+<script>
+  // Mark completed levels
+  const completed = JSON.parse(localStorage.getItem('xss-completed') || '[]');
+  completed.forEach(level => {
+    const card = document.getElementById(`level-${level}`);
+    if (card) card.classList.add('completed');
+  });
+</script>

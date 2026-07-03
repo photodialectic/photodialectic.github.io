@@ -1,0 +1,436 @@
+---
+layout: default
+title: XSS Game - Level 3
+---
+
+<style>
+  .level-wrap { max-width: 780px; margin: 0 auto; }
+  .level-header { margin-bottom: 2rem; }
+  .level-header h1 { font-size: 1.75rem; margin-bottom: 0.5rem; }
+  .level-header .breadcrumb { font-size: 0.85rem; color: var(--text-muted); margin-bottom: 1rem; }
+  .level-header .breadcrumb a { color: var(--text-muted); }
+  
+  .mission-box {
+    background: var(--card-bg);
+    border: 1px solid var(--border);
+    padding: 1.5rem;
+    margin-bottom: 2rem;
+  }
+  
+  .mission-box h2 {
+    font-size: 1.1rem;
+    font-weight: 400;
+    margin-bottom: 0.75rem;
+    color: var(--text-heading);
+  }
+  
+  .mission-box p {
+    font-size: 0.9rem;
+    color: var(--text-muted);
+    margin-bottom: 0.5rem;
+    line-height: 1.5;
+  }
+  
+  .target-frame {
+    background: var(--bg);
+    border: 1px solid var(--border);
+    padding: 2rem;
+    margin: 2rem 0;
+  }
+  
+  .target-frame h3 {
+    font-size: 1.3rem;
+    font-weight: 400;
+    margin-bottom: 1rem;
+    text-align: center;
+  }
+  
+  .address-bar {
+    max-width: 600px;
+    margin: 0 auto 1.5rem;
+    background: var(--card-bg);
+    border: 1px solid var(--border);
+    padding: 0.5rem 0.75rem;
+    display: flex;
+    align-items: center;
+    border-radius: 20px;
+  }
+  
+  .address-bar-icon {
+    color: var(--text-muted);
+    font-size: 0.9rem;
+    margin-right: 0.5rem;
+  }
+  
+  .address-bar-prefix {
+    color: var(--text-muted);
+    font-size: 0.85rem;
+    font-family: 'Courier New', monospace;
+    white-space: nowrap;
+  }
+  
+  .address-bar input {
+    flex: 1;
+    border: none;
+    background: transparent;
+    color: var(--text);
+    font-size: 0.85rem;
+    font-family: 'Courier New', monospace;
+    padding: 0.25rem 0;
+  }
+  
+  .address-bar input:focus {
+    outline: none;
+  }
+  
+  .address-bar button {
+    background: transparent;
+    border: none;
+    color: var(--text-muted);
+    cursor: pointer;
+    font-size: 1rem;
+    padding: 0.25rem 0.5rem;
+    transition: opacity 0.2s;
+  }
+  
+  .address-bar button:hover {
+    opacity: 0.6;
+  }
+  
+  .gallery {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1rem;
+    max-width: 500px;
+    margin: 0 auto 2rem;
+  }
+  
+  .gallery-item {
+    text-align: center;
+    cursor: pointer;
+    border: 2px solid transparent;
+    padding: 0.5rem;
+    transition: border-color 0.2s;
+  }
+  
+  .gallery-item:hover {
+    border-color: var(--border);
+  }
+  
+  .gallery-item img {
+    width: 100%;
+    height: 120px;
+    object-fit: cover;
+    border: 1px solid var(--border);
+    background: var(--card-bg);
+  }
+  
+  .gallery-item p {
+    margin-top: 0.5rem;
+    font-size: 0.85rem;
+    color: var(--text-muted);
+  }
+  
+  #selected-image {
+    max-width: 500px;
+    margin: 0 auto;
+    text-align: center;
+    min-height: 200px;
+  }
+  
+  #selected-image img {
+    max-width: 100%;
+    border: 1px solid var(--border);
+  }
+  
+  #selected-image p {
+    margin-top: 1rem;
+    color: var(--text-muted);
+  }
+  
+  .url-bar {
+    background: var(--card-bg);
+    border: 1px solid var(--border);
+    padding: 0.75rem;
+    margin-bottom: 1rem;
+    font-family: 'Courier New', monospace;
+    font-size: 0.85rem;
+    color: var(--text-muted);
+    word-break: break-all;
+    border-radius: 4px;
+  }
+  
+  .hints-section {
+    background: var(--card-bg);
+    border: 1px solid var(--border);
+    padding: 1.5rem;
+    margin-top: 2rem;
+  }
+  
+  .hints-section h2 {
+    font-size: 1.1rem;
+    font-weight: 400;
+    margin-bottom: 1rem;
+    color: var(--text-heading);
+  }
+  
+  .hint-toggle {
+    background: var(--card-bg);
+    border: 1px solid var(--border);
+    color: var(--text);
+    padding: 0.5rem 1rem;
+    cursor: pointer;
+    font-size: 0.85rem;
+    font-family: inherit;
+    margin-bottom: 0.5rem;
+    transition: opacity 0.2s;
+  }
+  
+  .hint-toggle:hover { opacity: 0.6; }
+  
+  .hint-content {
+    display: none;
+    margin-top: 0.75rem;
+    padding: 1rem;
+    background: var(--bg);
+    border-left: 2px solid var(--border);
+    font-size: 0.9rem;
+    color: var(--text-muted);
+  }
+  
+  .hint-content.show { display: block; }
+  
+  .source-section { margin-top: 2rem; }
+  
+  .source-toggle {
+    background: var(--card-bg);
+    border: 1px solid var(--border);
+    color: var(--text);
+    padding: 0.75rem 1.25rem;
+    cursor: pointer;
+    font-size: 0.9rem;
+    font-family: inherit;
+    transition: opacity 0.2s;
+  }
+  
+  .source-toggle:hover { opacity: 0.6; }
+  
+  .source-code {
+    display: none;
+    background: var(--card-bg);
+    border: 1px solid var(--border);
+    padding: 1.5rem;
+    margin-top: 1rem;
+    overflow-x: auto;
+  }
+  
+  .source-code.show { display: block; }
+  
+  .source-code pre {
+    font-family: 'Courier New', monospace;
+    font-size: 0.85rem;
+    color: var(--text);
+    line-height: 1.5;
+  }
+  
+  .nav-buttons {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 2rem;
+    padding-top: 2rem;
+    border-top: 1px solid var(--border-subtle);
+  }
+  
+  .nav-buttons a {
+    padding: 0.75rem 1.5rem;
+    background: var(--card-bg);
+    border: 1px solid var(--border);
+    color: var(--text);
+    text-decoration: none;
+    font-size: 0.9rem;
+    transition: opacity 0.2s;
+  }
+  
+  .nav-buttons a:hover { opacity: 0.6; }
+  
+  .success-banner {
+    display: none;
+    background: #4c4;
+    color: white;
+    padding: 1rem;
+    text-align: center;
+    margin: 2rem 0;
+    font-weight: 400;
+  }
+  
+  .success-banner.show { display: block; }
+  
+  @media (max-width: 640px) {
+    .level-header h1 { font-size: 1.5rem; }
+    .target-frame { padding: 1.5rem 1rem; }
+    .gallery { grid-template-columns: 1fr; }
+  }
+</style>
+
+<div class="level-wrap">
+  <div class="level-header">
+    <div class="breadcrumb">
+      <a href="./">XSS Game</a> / Level 3
+    </div>
+    <h1>[3/6] Level 3: Context Matters</h1>
+  </div>
+  
+  <div class="mission-box">
+    <h2>Mission Description</h2>
+    <p>This level shows how context matters in XSS. The vulnerability exists in how user input is placed into HTML attributes. You'll need to break out of the single-quoted attribute context to execute JavaScript.</p>
+    <p><strong>Mission Objective:</strong> Use the address bar to craft a value that will execute JavaScript when the image loads.</p>
+  </div>
+  
+  <div class="url-bar" id="url-display"></div>
+  
+  <div class="target-frame">
+    <h3>Image Gallery</h3>
+    <div class="address-bar">
+      <span class="address-bar-icon">🔒</span>
+      <span class="address-bar-prefix">gallery.app/view?img=</span><input type="text" id="image-num" placeholder="1" onkeypress="if(event.key==='Enter') loadImage()">
+      <button onclick="loadImage()" title="Go">→</button>
+    </div>
+    <div class="gallery" id="gallery"></div>
+    <div id="selected-image"></div>
+  </div>
+  
+  <div id="success-banner" class="success-banner">
+    ✓ Level Complete! You successfully exploited an attribute injection vulnerability.
+  </div>
+  
+  <div class="hints-section">
+    <h2>Hints</h2>
+    <button class="hint-toggle" onclick="toggleHint(1)">Show Hint 1</button>
+    <div class="hint-content" id="hint-1">
+      Click on any image or enter a value in the address bar. Notice how it updates the URL hash and loads the image. The hash value is being concatenated into the img src attribute with single quotes.
+    </div>
+    
+    <button class="hint-toggle" onclick="toggleHint(2)">Show Hint 2</button>
+    <div class="hint-content" id="hint-2">
+      Look at the source code. The img src uses single quotes. You need to break out with a single quote (<code>'</code>), add an event handler, then start a dummy attribute to consume the trailing <code>.jpg'</code>
+    </div>
+    
+    <button class="hint-toggle" onclick="toggleHint(3)">Show Hint 3</button>
+    <div class="hint-content" id="hint-3">
+      Try this in the address bar or modify the URL hash: <code>' /&gt; &lt;script&gt;alert(1);&lt;/script&gt; &lt;img src='</code>
+    </div>
+  </div>
+  
+  <div class="source-section">
+    <button class="source-toggle" onclick="toggleSource()">View Source Code</button>
+    <div class="source-code" id="source-code">
+      <pre>function chooseTab(num) {
+  // VULNERABLE: Direct string concatenation without escaping
+  var html = "Image " + parseInt(num) + "&lt;br&gt;";
+  html += "&lt;img src='https://picsum.photos/400/300?random=" + num + ".jpg' /&gt;";
+  
+  const container = document.getElementById('selected-image');
+  container.innerHTML = html;
+  
+  // Execute any script tags (simulates server-side rendering)
+  const scripts = container.querySelectorAll('script');
+  scripts.forEach(script =&gt; eval(script.textContent));
+}
+
+window.onload = function() {
+  // unescape() decodes URL-encoded characters from the hash
+  chooseTab(unescape(window.location.hash.substr(1)) || "1");
+}</pre>
+    </div>
+  </div>
+  
+  <div class="nav-buttons">
+    <a href="level2.html">← Previous Level</a>
+    <a href="level4.html">Next Level →</a>
+  </div>
+</div>
+
+<script>
+  let levelCompleted = false;
+  
+  // Override alert to detect successful XSS
+  const originalAlert = window.alert;
+  window.alert = function(msg) {
+    if (!levelCompleted) {
+      levelCompleted = true;
+      document.getElementById('success-banner').classList.add('show');
+      
+      const completed = JSON.parse(localStorage.getItem('xss-completed') || '[]');
+      if (!completed.includes(3)) {
+        completed.push(3);
+        localStorage.setItem('xss-completed', JSON.stringify(completed));
+      }
+    }
+    originalAlert.call(window, msg);
+  };
+  
+  function chooseTab(num) {
+    // Update URL display
+    document.getElementById('url-display').textContent = 
+      window.location.pathname + window.location.hash;
+    
+    // Update input
+    document.getElementById('image-num').value = num;
+    
+    // VULNERABLE: Direct string concatenation like the original
+    var html = "Image " + parseInt(num) + "<br>";
+    html += "<img src='https://picsum.photos/400/300?random=" + num + ".jpg' />";
+    
+    const container = document.getElementById('selected-image');
+    container.innerHTML = html;
+    
+    // Execute any script tags (to simulate server-side rendering vulnerability)
+    const scripts = container.querySelectorAll('script');
+    scripts.forEach(script => {
+      eval(script.textContent);
+    });
+  }
+  
+  function loadImage() {
+    const num = document.getElementById('image-num').value;
+    window.location.hash = num;
+    chooseTab(num);
+  }
+  
+  function renderGallery() {
+    const gallery = document.getElementById('gallery');
+    gallery.innerHTML = '';
+    
+    // Show 6 thumbnail images
+    for (let i = 1; i <= 6; i++) {
+      const item = document.createElement('div');
+      item.className = 'gallery-item';
+      item.onclick = () => chooseTab(i.toString());
+      item.innerHTML = `
+        <img src="https://picsum.photos/150/150?random=${i}" alt="Image ${i}">
+        <p>Image ${i}</p>
+      `;
+      gallery.appendChild(item);
+    }
+  }
+  
+  function toggleHint(num) {
+    const hint = document.getElementById(`hint-${num}`);
+    hint.classList.toggle('show');
+  }
+  
+  function toggleSource() {
+    const source = document.getElementById('source-code');
+    source.classList.toggle('show');
+  }
+  
+  // Initial render
+  window.onload = function() {
+    renderGallery();
+    chooseTab(unescape(window.location.hash.substr(1)) || "1");
+  }
+  
+  window.addEventListener('hashchange', function() {
+    chooseTab(unescape(window.location.hash.substr(1)));
+  });
+</script>

@@ -12,8 +12,12 @@ This is a GitHub Pages repository that uses Jekyll for static site generation. T
 
 - **Light/Dark Theme Toggle:** Automatic system preference detection with manual override
 - **Responsive Design:** Mobile-friendly layouts optimized for all screen sizes
-- **Interactive Games:** Minesweeper and cryptogram puzzles
+- **Interactive Games:** Minesweeper, cryptogram puzzles, and XSS security game
 - **Clean Minimal Design:** Helvetica typography, thin 1px borders, theme-aware colors
+
+## Attribution
+
+The XSS Security Game is inspired by and adapted from Google's original [XSS Game](https://xss-game.appspot.com/).
 
 ## Tech Stack
 
