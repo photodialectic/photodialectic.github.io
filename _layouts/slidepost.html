@@ -1,410 +1,456 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>{% if page.title %}{{ page.title }} – {{ site.title }}{% else %}{{ site.title }}{% endif %}</title>
-  <style>
-    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-    
-    html {
-      scroll-behavior: smooth;
-    }
-    
-    :root {
-      --bg: #fff;
-      --text: #111;
-      --text-heading: #000;
-      --text-muted: #666;
-      --text-subtle: #999;
-      --border: #ddd;
-      --border-subtle: #eee;
-      --card-bg: #fff;
-    }
-    
-    body.dark {
-      --bg: #0d0d0d;
-      --text: #ccc;
-      --text-heading: #eee;
-      --text-muted: #888;
-      --text-subtle: #666;
-      --border: #333;
-      --border-subtle: #222;
-      --card-bg: #1a1a1a;
-    }
-    
-    body {
-      font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
-      color: var(--text);
-      background: var(--bg);
-      line-height: 1.6;
-      -webkit-font-smoothing: antialiased;
-      -moz-osx-font-smoothing: grayscale;
-      transition: background-color 0.3s, color 0.3s;
-    }
-    
-    nav { 
-      max-width: 1400px; 
-      margin: 0 auto; 
-      display: flex; 
-      align-items: center;
-      flex-wrap: wrap;
-      gap: 1.5rem; 
-      font-size: 0.9rem;
-      padding: 2rem 1.5rem;
-      border-bottom: 1px solid var(--border-subtle);
-    }
-    nav a { 
-      color: var(--text); 
-      font-weight: 400; 
-      text-decoration: none;
-      transition: opacity 0.2s;
-    }
-    nav a:hover { opacity: 0.6; }
-    nav .sep { color: var(--border); }
-    .theme-toggle {
-      margin-left: auto;
-      background: none;
-      border: 1px solid var(--border);
-      color: var(--text);
-      padding: 0.4rem 0.8rem;
-      cursor: pointer;
-      font-size: 0.85rem;
-      font-family: inherit;
-      transition: border-color 0.2s, opacity 0.2s;
-    }
-    .theme-toggle:hover { opacity: 0.6; }
-    
-    article {
-      max-width: 1400px;
-      margin: 0 auto;
-      padding: 3rem 1.5rem 5rem;
-    }
-    
-    article > header {
-      max-width: 720px;
-      margin: 0 auto 4rem;
-    }
-    
-    article > header h1 { 
-      font-size: 2.5rem; 
-      font-weight: 400; 
-      letter-spacing: -0.02em; 
-      margin-bottom: 0.5rem; 
-      color: var(--text-heading); 
-    }
-    
-    article > header p { 
-      color: var(--text-muted); 
-      margin-bottom: 0;
-      font-size: 1.1rem;
-      font-weight: 300;
-    }
-    
-    .slide {
-      display: grid;
-      grid-template-columns: 1fr;
-      gap: 2rem;
-      margin-bottom: 4rem;
-      padding: 2rem 0;
-      min-height: 60vh;
-      align-items: center;
-      opacity: 0;
-      transform: translateY(30px);
-      transition: opacity 0.6s ease-out, transform 0.6s ease-out;
-    }
-    
-    .slide.active {
-      opacity: 1;
-      transform: translateY(0);
-    }
-    
-    .slide-text {
-      padding-right: 1rem;
-    }
-    
-    .slide-text h2 {
-      font-size: 2rem;
-      font-weight: 400;
-      letter-spacing: -0.02em;
-      margin-bottom: 1rem;
-      color: var(--text-heading);
-    }
-    
-    .slide-text p {
-      font-size: 1.1rem;
-      line-height: 1.7;
-      color: var(--text-muted);
-      margin-bottom: 1rem;
-    }
-    
-    .slide-text ul, .slide-text ol {
-      margin-left: 1.5rem;
-      margin-bottom: 1rem;
-      color: var(--text-muted);
-    }
-    
-    .slide-text li {
-      margin-bottom: 0.5rem;
-      font-size: 1.1rem;
-    }
-    
-    .slide-animation {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      min-height: 300px;
-      border: 1px solid var(--border);
-      background: var(--card-bg);
-      position: relative;
-      overflow: hidden;
-    }
-    
-    /* Desktop: 2-column layout */
-    @media (min-width: 768px) {
-      .slide {
-        grid-template-columns: 1fr 1fr;
-        gap: 3rem;
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>
+      {% if page.title %}{{ page.title }} – {{ site.title }}{% else %}{{
+      site.title }}{% endif %}
+    </title>
+    <style>
+      *,
+      *::before,
+      *::after {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
       }
-      
-      .slide-animation {
-        min-height: 400px;
+
+      html {
+        scroll-behavior: smooth;
       }
-    }
-    
-    /* Slide Navigation - Bottom bar for all screens */
-    .slide-nav {
-      position: fixed;
-      bottom: 1.5rem;
-      left: 50%;
-      transform: translateX(-50%);
-      z-index: 100;
-      display: flex;
-      flex-direction: row;
-      gap: 0.75rem;
-      background: var(--card-bg);
-      border: 1px solid var(--border);
-      padding: 0.75rem 1rem;
-      border-radius: 2rem;
-    }
-    
-    .slide-nav-item {
-      cursor: pointer;
-      transition: opacity 0.2s;
-      text-decoration: none;
-      display: flex;
-      align-items: center;
-      gap: 0.5rem;
-    }
-    
-    .slide-nav-item:hover {
-      opacity: 0.6;
-    }
-    
-    .slide-nav-dot {
-      width: 8px;
-      height: 8px;
-      border: 1px solid var(--border);
-      border-radius: 50%;
-      background: transparent;
-      transition: all 0.2s;
-    }
-    
-    .slide-nav-item.active .slide-nav-dot {
-      background: var(--text);
-      border-color: var(--text);
-      transform: scale(1.3);
-    }
-    
-    .slide-nav-label {
-      display: none;
-    }
-    
-    /* Desktop: Show labels on hover */
-    @media (min-width: 768px) {
-      .slide-nav {
-        padding: 0.75rem 1.25rem;
+
+      :root {
+        --bg: #fff;
+        --text: #111;
+        --text-heading: #000;
+        --text-muted: #666;
+        --text-subtle: #999;
+        --border: #ddd;
+        --border-subtle: #eee;
+        --card-bg: #fff;
       }
-      
-      .slide-nav-label {
-        display: block;
-        font-size: 0.85rem;
-        color: var(--text-muted);
-        opacity: 0;
-        white-space: nowrap;
-        max-width: 0;
-        overflow: hidden;
-        transition: opacity 0.2s, max-width 0.2s;
+
+      body.dark {
+        --bg: #0d0d0d;
+        --text: #ccc;
+        --text-heading: #eee;
+        --text-muted: #888;
+        --text-subtle: #666;
+        --border: #333;
+        --border-subtle: #222;
+        --card-bg: #1a1a1a;
       }
-      
-      .slide-nav-item:hover .slide-nav-label,
-      .slide-nav-item.active .slide-nav-label {
-        opacity: 1;
-        max-width: 200px;
+
+      body {
+        font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+        color: var(--text);
+        background: var(--bg);
+        line-height: 1.6;
+        -webkit-font-smoothing: antialiased;
+        -moz-osx-font-smoothing: grayscale;
+        transition:
+          background-color 0.3s,
+          color 0.3s;
       }
-    }
-    
-    /* Mobile adjustments */
-    @media (max-width: 767px) {
-      body { padding: 0; }
-      
-      nav { 
-        padding: 1.5rem 1rem;
-        gap: 1rem; 
-        font-size: 0.85rem;
+
+      nav {
+        max-width: 1400px;
+        margin: 0 auto;
+        display: flex;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 1.5rem;
+        font-size: 0.9rem;
+        padding: 2rem 1.5rem;
+        border-bottom: 1px solid var(--border-subtle);
       }
-      
+      nav a {
+        color: var(--text);
+        font-weight: 400;
+        text-decoration: none;
+        transition: opacity 0.2s;
+      }
+      nav a:hover {
+        opacity: 0.6;
+      }
+      nav .sep {
+        color: var(--border);
+      }
       .theme-toggle {
-        padding: 0.3rem 0.6rem;
-        font-size: 0.8rem;
+        margin-left: auto;
+        background: none;
+        border: 1px solid var(--border);
+        color: var(--text);
+        padding: 0.4rem 0.8rem;
+        cursor: pointer;
+        font-size: 0.85rem;
+        font-family: inherit;
+        transition:
+          border-color 0.2s,
+          opacity 0.2s;
       }
-      
+      .theme-toggle:hover {
+        opacity: 0.6;
+      }
+
       article {
-        padding: 2rem 1rem 5rem;
+        max-width: 1400px;
+        margin: 0 auto;
+        padding: 3rem 1.5rem 5rem;
       }
-      
+
       article > header {
-        margin-bottom: 2rem;
+        max-width: 720px;
+        margin: 0 auto 4rem;
       }
-      
-      article > header h1 { 
-        font-size: 2rem; 
+
+      article > header h1 {
+        font-size: 2.5rem;
+        font-weight: 400;
+        letter-spacing: -0.02em;
+        margin-bottom: 0.5rem;
+        color: var(--text-heading);
       }
-      
-      article > header p { 
-        font-size: 1rem;
+
+      article > header p {
+        color: var(--text-muted);
+        margin-bottom: 0;
+        font-size: 1.1rem;
+        font-weight: 300;
       }
-      
+
       .slide {
-        margin-bottom: 2rem;
-        min-height: auto;
-        padding: 1rem 0;
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 2rem;
+        margin-bottom: 4rem;
+        padding: 2rem 0;
+        min-height: 60vh;
+        align-items: center;
+        opacity: 0;
+        transform: translateY(30px);
+        transition:
+          opacity 0.6s ease-out,
+          transform 0.6s ease-out;
       }
-      
+
+      .slide.active {
+        opacity: 1;
+        transform: translateY(0);
+      }
+
+      .slide-text {
+        padding-right: 1rem;
+      }
+
       .slide-text h2 {
-        font-size: 1.5rem;
+        font-size: 2rem;
+        font-weight: 400;
+        letter-spacing: -0.02em;
+        margin-bottom: 1rem;
+        color: var(--text-heading);
       }
-      
-      .slide-text p,
+
+      .slide-text p {
+        font-size: 1.1rem;
+        line-height: 1.7;
+        color: var(--text-muted);
+        margin-bottom: 1rem;
+      }
+
+      .slide-text ul,
+      .slide-text ol {
+        margin-left: 1.5rem;
+        margin-bottom: 1rem;
+        color: var(--text-muted);
+      }
+
       .slide-text li {
-        font-size: 1rem;
+        margin-bottom: 0.5rem;
+        font-size: 1.1rem;
       }
-      
+
       .slide-animation {
-        min-height: 250px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        min-height: 300px;
+        border: 1px solid var(--border);
+        background: var(--card-bg);
+        position: relative;
+        overflow: hidden;
       }
-    }
-  </style>
-</head>
-<body>
-  <nav>
-    <a href="/">photodialectic</a><span class="sep">/</span><a href="/game/">games</a><span class="sep">/</span><a href="/talks/">talks</a><span class="sep">/</span><a href="https://www.nickhedberg.com" target="_blank" rel="noopener noreferrer">nhdc</a>
-    <button class="theme-toggle" aria-label="Toggle theme">
-      <span class="theme-toggle-light">dark</span>
-      <span class="theme-toggle-dark" style="display:none;">light</span>
-    </button>
-  </nav>
-  
-  <nav class="slide-nav" aria-label="Slide navigation"></nav>
-  
-  <article>
-    <header>
-      <h1>{{ page.title }}</h1>
-      {% if page.description %}<p>{{ page.description }}</p>{% endif %}
-    </header>
-    
-    {{ content }}
-  </article>
-  
-  <script>
-    // Theme toggle
-    const toggle = document.querySelector('.theme-toggle');
-    const lightLabel = document.querySelector('.theme-toggle-light');
-    const darkLabel = document.querySelector('.theme-toggle-dark');
-    
-    function setTheme(theme) {
-      document.body.classList.toggle('dark', theme === 'dark');
-      lightLabel.style.display = theme === 'dark' ? 'none' : 'inline';
-      darkLabel.style.display = theme === 'dark' ? 'inline' : 'none';
-      localStorage.setItem('theme', theme);
-    }
-    
-    const savedTheme = localStorage.getItem('theme');
-    const systemTheme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
-    setTheme(savedTheme || systemTheme);
-    
-    toggle.addEventListener('click', () => {
-      const currentTheme = document.body.classList.contains('dark') ? 'dark' : 'light';
-      setTheme(currentTheme === 'dark' ? 'light' : 'dark');
-    });
-    
-    window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', (e) => {
-      if (!localStorage.getItem('theme')) {
-        setTheme(e.matches ? 'dark' : 'light');
-      }
-    });
-    
-    // Generate slide navigation
-    const slides = document.querySelectorAll('.slide');
-    const slideNav = document.querySelector('.slide-nav');
-    
-    slides.forEach((slide, index) => {
-      // Add ID to slide for navigation
-      slide.id = `slide-${index}`;
-      
-      // Get slide title from h2 or use slide number
-      const heading = slide.querySelector('.slide-text h2');
-      const title = heading ? heading.textContent : `Slide ${index + 1}`;
-      
-      // Create nav item
-      const navItem = document.createElement('a');
-      navItem.className = 'slide-nav-item';
-      navItem.href = `#slide-${index}`;
-      navItem.setAttribute('aria-label', `Go to ${title}`);
-      
-      const dot = document.createElement('span');
-      dot.className = 'slide-nav-dot';
-      dot.setAttribute('aria-hidden', 'true');
-      
-      const label = document.createElement('span');
-      label.className = 'slide-nav-label';
-      label.textContent = title;
-      
-      navItem.appendChild(dot);
-      navItem.appendChild(label);
-      slideNav.appendChild(navItem);
-      
-      // Smooth scroll on click
-      navItem.addEventListener('click', (e) => {
-        e.preventDefault();
-        slide.scrollIntoView({ behavior: 'smooth', block: 'center' });
-      });
-    });
-    
-    // Intersection Observer for slide animations and active nav tracking
-    const navItems = document.querySelectorAll('.slide-nav-item');
-    
-    const observer = new IntersectionObserver((entries) => {
-      entries.forEach(entry => {
-        if (entry.isIntersecting) {
-          // Fade in slide
-          entry.target.classList.add('active');
-          
-          // Update active nav item
-          const index = Array.from(slides).indexOf(entry.target);
-          navItems.forEach((item, i) => {
-            item.classList.toggle('active', i === index);
-          });
+
+      /* Desktop: 2-column layout */
+      @media (min-width: 768px) {
+        .slide {
+          grid-template-columns: 1fr 1fr;
+          gap: 3rem;
         }
+
+        .slide-animation {
+          min-height: 400px;
+        }
+      }
+
+      /* Slide Navigation - Bottom bar for all screens */
+      .slide-nav {
+        position: fixed;
+        bottom: 1.5rem;
+        left: 50%;
+        transform: translateX(-50%);
+        z-index: 100;
+        display: flex;
+        flex-direction: row;
+        gap: 0.75rem;
+        background: var(--card-bg);
+        border: 1px solid var(--border);
+        padding: 0.75rem 1rem;
+        border-radius: 2rem;
+      }
+
+      .slide-nav-item {
+        cursor: pointer;
+        transition: opacity 0.2s;
+        text-decoration: none;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+      }
+
+      .slide-nav-item:hover {
+        opacity: 0.6;
+      }
+
+      .slide-nav-dot {
+        width: 8px;
+        height: 8px;
+        border: 1px solid var(--border);
+        border-radius: 50%;
+        background: transparent;
+        transition: all 0.2s;
+      }
+
+      .slide-nav-item.active .slide-nav-dot {
+        background: var(--text);
+        border-color: var(--text);
+        transform: scale(1.3);
+      }
+
+      .slide-nav-label {
+        display: none;
+      }
+
+      /* Desktop: Show labels on hover */
+      @media (min-width: 768px) {
+        .slide-nav {
+          padding: 0.75rem 1.25rem;
+        }
+
+        .slide-nav-label {
+          display: block;
+          font-size: 0.85rem;
+          color: var(--text-muted);
+          opacity: 0;
+          white-space: nowrap;
+          max-width: 0;
+          overflow: hidden;
+          transition:
+            opacity 0.2s,
+            max-width 0.2s;
+        }
+
+        .slide-nav-item:hover .slide-nav-label,
+        .slide-nav-item.active .slide-nav-label {
+          opacity: 1;
+          max-width: 200px;
+        }
+      }
+
+      /* Mobile adjustments */
+      @media (max-width: 767px) {
+        body {
+          padding: 0;
+        }
+
+        nav {
+          padding: 1.5rem 1rem;
+          gap: 1rem;
+          font-size: 0.85rem;
+        }
+
+        .theme-toggle {
+          padding: 0.3rem 0.6rem;
+          font-size: 0.8rem;
+        }
+
+        article {
+          padding: 2rem 1rem 5rem;
+        }
+
+        article > header {
+          margin-bottom: 2rem;
+        }
+
+        article > header h1 {
+          font-size: 2rem;
+        }
+
+        article > header p {
+          font-size: 1rem;
+        }
+
+        .slide {
+          margin-bottom: 2rem;
+          min-height: auto;
+          padding: 1rem 0;
+        }
+
+        .slide-text h2 {
+          font-size: 1.5rem;
+        }
+
+        .slide-text p,
+        .slide-text li {
+          font-size: 1rem;
+        }
+
+        .slide-animation {
+          min-height: 250px;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <nav>
+      <a href="/">photodialectic</a><span class="sep">/</span
+      ><a href="/game/">games</a><span class="sep">/</span
+      ><a href="/talks/">talks</a><span class="sep">/</span
+      ><a
+        href="https://www.nickhedberg.com"
+        target="_blank"
+        rel="noopener noreferrer"
+        >nhdc</a
+      >
+      <button class="theme-toggle" aria-label="Toggle theme">
+        <span class="theme-toggle-light">dark</span>
+        <span class="theme-toggle-dark" style="display: none">light</span>
+      </button>
+    </nav>
+
+    <nav class="slide-nav" aria-label="Slide navigation"></nav>
+
+    <article>
+      <header>
+        <h1>{{ page.title }}</h1>
+        {% if page.description %}
+        <p>{{ page.description }}</p>
+        {% endif %}
+      </header>
+
+      {{ content }}
+    </article>
+
+    <script>
+      // Theme toggle
+      const toggle = document.querySelector(".theme-toggle");
+      const lightLabel = document.querySelector(".theme-toggle-light");
+      const darkLabel = document.querySelector(".theme-toggle-dark");
+
+      function setTheme(theme) {
+        document.body.classList.toggle("dark", theme === "dark");
+        lightLabel.style.display = theme === "dark" ? "none" : "inline";
+        darkLabel.style.display = theme === "dark" ? "inline" : "none";
+        localStorage.setItem("theme", theme);
+      }
+
+      const savedTheme = localStorage.getItem("theme");
+      const systemTheme = window.matchMedia("(prefers-color-scheme: dark)")
+        .matches
+        ? "dark"
+        : "light";
+      setTheme(savedTheme || systemTheme);
+
+      toggle.addEventListener("click", () => {
+        const currentTheme = document.body.classList.contains("dark")
+          ? "dark"
+          : "light";
+        setTheme(currentTheme === "dark" ? "light" : "dark");
       });
-    }, {
-      threshold: 0.5,
-      rootMargin: '0px 0px -20% 0px'
-    });
-    
-    slides.forEach(slide => {
-      observer.observe(slide);
-    });
-  </script>
-</body>
+
+      window
+        .matchMedia("(prefers-color-scheme: dark)")
+        .addEventListener("change", (e) => {
+          if (!localStorage.getItem("theme")) {
+            setTheme(e.matches ? "dark" : "light");
+          }
+        });
+
+      // Generate slide navigation
+      const slides = document.querySelectorAll(".slide");
+      const slideNav = document.querySelector(".slide-nav");
+
+      slides.forEach((slide, index) => {
+        // Add ID to slide for navigation
+        slide.id = `slide-${index}`;
+
+        // Get slide title from h2 or use slide number
+        const heading = slide.querySelector(".slide-text h2");
+        const title = heading ? heading.textContent : `Slide ${index + 1}`;
+
+        // Create nav item
+        const navItem = document.createElement("a");
+        navItem.className = "slide-nav-item";
+        navItem.href = `#slide-${index}`;
+        navItem.setAttribute("aria-label", `Go to ${title}`);
+
+        const dot = document.createElement("span");
+        dot.className = "slide-nav-dot";
+        dot.setAttribute("aria-hidden", "true");
+
+        const label = document.createElement("span");
+        label.className = "slide-nav-label";
+        label.textContent = title;
+
+        navItem.appendChild(dot);
+        navItem.appendChild(label);
+        slideNav.appendChild(navItem);
+
+        // Smooth scroll on click
+        navItem.addEventListener("click", (e) => {
+          e.preventDefault();
+          slide.scrollIntoView({ behavior: "smooth", block: "center" });
+        });
+      });
+
+      // Intersection Observer for slide animations and active nav tracking
+      const navItems = document.querySelectorAll(".slide-nav-item");
+
+      const observer = new IntersectionObserver(
+        (entries) => {
+          entries.forEach((entry) => {
+            if (entry.isIntersecting) {
+              // Fade in slide
+              entry.target.classList.add("active");
+
+              // Update active nav item
+              const index = Array.from(slides).indexOf(entry.target);
+              navItems.forEach((item, i) => {
+                item.classList.toggle("active", i === index);
+              });
+            }
+          });
+        },
+        {
+          threshold: 0.5,
+          rootMargin: "0px 0px -20% 0px",
+        },
+      );
+
+      slides.forEach((slide) => {
+        observer.observe(slide);
+      });
+    </script>
+  </body>
 </html>

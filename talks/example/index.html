@@ -7,18 +7,57 @@ description: A demonstration of the slidepost format with animations.
 <div class="slide">
   <div class="slide-text">
     <h2>Welcome</h2>
-    <p>This is an example of the slide post format. Each slide has text on one side and an animation on the other.</p>
-    <p>On mobile, they stack vertically. On desktop, they appear side-by-side.</p>
+    <p>
+      This is an example of the slide post format. Each slide has text on one
+      side and an animation on the other.
+    </p>
+    <p>
+      On mobile, they stack vertically. On desktop, they appear side-by-side.
+    </p>
   </div>
   <div class="slide-animation">
     <svg width="200" height="200" viewBox="0 0 200 200">
-      <circle cx="100" cy="100" r="50" fill="none" stroke="currentColor" stroke-width="2">
-        <animate attributeName="r" values="30;50;30" dur="2s" repeatCount="indefinite"/>
-        <animate attributeName="opacity" values="1;0.5;1" dur="2s" repeatCount="indefinite"/>
+      <circle
+        cx="100"
+        cy="100"
+        r="50"
+        fill="none"
+        stroke="currentColor"
+        stroke-width="2"
+      >
+        <animate
+          attributeName="r"
+          values="30;50;30"
+          dur="2s"
+          repeatCount="indefinite"
+        />
+        <animate
+          attributeName="opacity"
+          values="1;0.5;1"
+          dur="2s"
+          repeatCount="indefinite"
+        />
       </circle>
-      <circle cx="100" cy="100" r="30" fill="none" stroke="currentColor" stroke-width="2">
-        <animate attributeName="r" values="50;30;50" dur="2s" repeatCount="indefinite"/>
-        <animate attributeName="opacity" values="0.5;1;0.5" dur="2s" repeatCount="indefinite"/>
+      <circle
+        cx="100"
+        cy="100"
+        r="30"
+        fill="none"
+        stroke="currentColor"
+        stroke-width="2"
+      >
+        <animate
+          attributeName="r"
+          values="50;30;50"
+          dur="2s"
+          repeatCount="indefinite"
+        />
+        <animate
+          attributeName="opacity"
+          values="0.5;1;0.5"
+          dur="2s"
+          repeatCount="indefinite"
+        />
       </circle>
     </svg>
   </div>
@@ -36,19 +75,34 @@ description: A demonstration of the slidepost format with animations.
   </div>
   <div class="slide-animation">
     <style>
-      .boxes { display: flex; gap: 1rem; align-items: center; }
+      .boxes {
+        display: flex;
+        gap: 1rem;
+        align-items: center;
+      }
       .box {
         width: 60px;
         height: 60px;
         border: 2px solid currentColor;
         animation: float 3s ease-in-out infinite;
       }
-      .box:nth-child(1) { animation-delay: 0s; }
-      .box:nth-child(2) { animation-delay: 0.3s; }
-      .box:nth-child(3) { animation-delay: 0.6s; }
+      .box:nth-child(1) {
+        animation-delay: 0s;
+      }
+      .box:nth-child(2) {
+        animation-delay: 0.3s;
+      }
+      .box:nth-child(3) {
+        animation-delay: 0.6s;
+      }
       @keyframes float {
-        0%, 100% { transform: translateY(0); }
-        50% { transform: translateY(-20px); }
+        0%,
+        100% {
+          transform: translateY(0);
+        }
+        50% {
+          transform: translateY(-20px);
+        }
       }
     </style>
     <div class="boxes">
@@ -81,7 +135,9 @@ description: A demonstration of the slidepost format with animations.
         animation: spin 1.5s linear infinite;
       }
       @keyframes spin {
-        to { transform: rotate(360deg); }
+        to {
+          transform: rotate(360deg);
+        }
       }
     </style>
     <div class="spinner"></div>
@@ -96,7 +152,9 @@ description: A demonstration of the slidepost format with animations.
       <li><strong>Mobile:</strong> Stacked vertically, text above animation</li>
       <li><strong>Desktop:</strong> Side-by-side, 50/50 split</li>
     </ul>
-    <p>Animations trigger as you scroll into view using Intersection Observer.</p>
+    <p>
+      Animations trigger as you scroll into view using Intersection Observer.
+    </p>
   </div>
   <div class="slide-animation">
     <style>
@@ -111,18 +169,41 @@ description: A demonstration of the slidepost format with animations.
         border: 1px solid currentColor;
         animation: pulse 2s ease-in-out infinite;
       }
-      .cell:nth-child(1) { animation-delay: 0s; }
-      .cell:nth-child(2) { animation-delay: 0.2s; }
-      .cell:nth-child(3) { animation-delay: 0.4s; }
-      .cell:nth-child(4) { animation-delay: 0.6s; }
-      .cell:nth-child(5) { animation-delay: 0.8s; }
-      .cell:nth-child(6) { animation-delay: 1s; }
-      .cell:nth-child(7) { animation-delay: 1.2s; }
-      .cell:nth-child(8) { animation-delay: 1.4s; }
-      .cell:nth-child(9) { animation-delay: 1.6s; }
+      .cell:nth-child(1) {
+        animation-delay: 0s;
+      }
+      .cell:nth-child(2) {
+        animation-delay: 0.2s;
+      }
+      .cell:nth-child(3) {
+        animation-delay: 0.4s;
+      }
+      .cell:nth-child(4) {
+        animation-delay: 0.6s;
+      }
+      .cell:nth-child(5) {
+        animation-delay: 0.8s;
+      }
+      .cell:nth-child(6) {
+        animation-delay: 1s;
+      }
+      .cell:nth-child(7) {
+        animation-delay: 1.2s;
+      }
+      .cell:nth-child(8) {
+        animation-delay: 1.4s;
+      }
+      .cell:nth-child(9) {
+        animation-delay: 1.6s;
+      }
       @keyframes pulse {
-        0%, 100% { opacity: 0.3; }
-        50% { opacity: 1; }
+        0%,
+        100% {
+          opacity: 0.3;
+        }
+        50% {
+          opacity: 1;
+        }
       }
     </style>
     <div class="grid-demo">

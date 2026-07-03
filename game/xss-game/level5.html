@@ -4,63 +4,77 @@ title: XSS Game - Level 5
 ---
 
 <style>
-  .level-wrap { max-width: 780px; margin: 0 auto; }
-  .level-header { margin-bottom: 2rem; }
-  .level-header h1 { font-size: 1.75rem; margin-bottom: 0.5rem; }
-  .level-header .breadcrumb { font-size: 0.85rem; color: var(--text-muted); margin-bottom: 1rem; }
-  .level-header .breadcrumb a { color: var(--text-muted); }
-  
+  .level-wrap {
+    max-width: 780px;
+    margin: 0 auto;
+  }
+  .level-header {
+    margin-bottom: 2rem;
+  }
+  .level-header h1 {
+    font-size: 1.75rem;
+    margin-bottom: 0.5rem;
+  }
+  .level-header .breadcrumb {
+    font-size: 0.85rem;
+    color: var(--text-muted);
+    margin-bottom: 1rem;
+  }
+  .level-header .breadcrumb a {
+    color: var(--text-muted);
+  }
+
   .mission-box {
     background: var(--card-bg);
     border: 1px solid var(--border);
     padding: 1.5rem;
     margin-bottom: 2rem;
   }
-  
+
   .mission-box h2 {
     font-size: 1.1rem;
     font-weight: 400;
     margin-bottom: 0.75rem;
     color: var(--text-heading);
   }
-  
+
   .mission-box p {
     font-size: 0.9rem;
     color: var(--text-muted);
     margin-bottom: 0.5rem;
     line-height: 1.5;
   }
-  
+
   .target-frame {
     background: var(--bg);
     border: 1px solid var(--border);
     padding: 2rem;
     margin: 2rem 0;
   }
-  
+
   .target-frame h3 {
     font-size: 1.3rem;
     font-weight: 400;
     margin-bottom: 1.5rem;
     text-align: center;
   }
-  
+
   .url-bar {
     background: var(--card-bg);
     border: 1px solid var(--border);
     padding: 0.75rem;
     margin-bottom: 1rem;
-    font-family: 'Courier New', monospace;
+    font-family: "Courier New", monospace;
     font-size: 0.85rem;
     color: var(--text-muted);
     word-break: break-all;
   }
-  
+
   .signup-form {
     max-width: 400px;
     margin: 0 auto;
   }
-  
+
   .signup-form input {
     width: 100%;
     padding: 0.75rem;
@@ -71,12 +85,12 @@ title: XSS Game - Level 5
     font-family: inherit;
     margin-bottom: 1rem;
   }
-  
+
   .signup-form input:focus {
     outline: none;
     border-color: var(--text);
   }
-  
+
   .signup-form button {
     width: 100%;
     padding: 0.75rem;
@@ -88,32 +102,36 @@ title: XSS Game - Level 5
     font-family: inherit;
     transition: opacity 0.2s;
   }
-  
-  .signup-form button:hover { opacity: 0.6; }
-  
+
+  .signup-form button:hover {
+    opacity: 0.6;
+  }
+
   .confirmation {
     display: none;
     text-align: center;
     color: var(--text-muted);
     margin-top: 1.5rem;
   }
-  
-  .confirmation.show { display: block; }
-  
+
+  .confirmation.show {
+    display: block;
+  }
+
   .hints-section {
     background: var(--card-bg);
     border: 1px solid var(--border);
     padding: 1.5rem;
     margin-top: 2rem;
   }
-  
+
   .hints-section h2 {
     font-size: 1.1rem;
     font-weight: 400;
     margin-bottom: 1rem;
     color: var(--text-heading);
   }
-  
+
   .hint-toggle {
     background: var(--card-bg);
     border: 1px solid var(--border);
@@ -125,9 +143,11 @@ title: XSS Game - Level 5
     margin-bottom: 0.5rem;
     transition: opacity 0.2s;
   }
-  
-  .hint-toggle:hover { opacity: 0.6; }
-  
+
+  .hint-toggle:hover {
+    opacity: 0.6;
+  }
+
   .hint-content {
     display: none;
     margin-top: 0.75rem;
@@ -137,11 +157,15 @@ title: XSS Game - Level 5
     font-size: 0.9rem;
     color: var(--text-muted);
   }
-  
-  .hint-content.show { display: block; }
-  
-  .source-section { margin-top: 2rem; }
-  
+
+  .hint-content.show {
+    display: block;
+  }
+
+  .source-section {
+    margin-top: 2rem;
+  }
+
   .source-toggle {
     background: var(--card-bg);
     border: 1px solid var(--border);
@@ -152,9 +176,11 @@ title: XSS Game - Level 5
     font-family: inherit;
     transition: opacity 0.2s;
   }
-  
-  .source-toggle:hover { opacity: 0.6; }
-  
+
+  .source-toggle:hover {
+    opacity: 0.6;
+  }
+
   .source-code {
     display: none;
     background: var(--card-bg);
@@ -163,16 +189,18 @@ title: XSS Game - Level 5
     margin-top: 1rem;
     overflow-x: auto;
   }
-  
-  .source-code.show { display: block; }
-  
+
+  .source-code.show {
+    display: block;
+  }
+
   .source-code pre {
-    font-family: 'Courier New', monospace;
+    font-family: "Courier New", monospace;
     font-size: 0.85rem;
     color: var(--text);
     line-height: 1.5;
   }
-  
+
   .nav-buttons {
     display: flex;
     justify-content: space-between;
@@ -180,7 +208,7 @@ title: XSS Game - Level 5
     padding-top: 2rem;
     border-top: 1px solid var(--border-subtle);
   }
-  
+
   .nav-buttons a {
     padding: 0.75rem 1.5rem;
     background: var(--card-bg);
@@ -190,9 +218,11 @@ title: XSS Game - Level 5
     font-size: 0.9rem;
     transition: opacity 0.2s;
   }
-  
-  .nav-buttons a:hover { opacity: 0.6; }
-  
+
+  .nav-buttons a:hover {
+    opacity: 0.6;
+  }
+
   .success-banner {
     display: none;
     background: #4c4;
@@ -202,66 +232,83 @@ title: XSS Game - Level 5
     margin: 2rem 0;
     font-weight: 400;
   }
-  
-  .success-banner.show { display: block; }
-  
+
+  .success-banner.show {
+    display: block;
+  }
+
   @media (max-width: 640px) {
-    .level-header h1 { font-size: 1.5rem; }
-    .target-frame { padding: 1.5rem 1rem; }
+    .level-header h1 {
+      font-size: 1.5rem;
+    }
+    .target-frame {
+      padding: 1.5rem 1rem;
+    }
   }
 </style>
 
 <div class="level-wrap">
   <div class="level-header">
-    <div class="breadcrumb">
-      <a href="./">XSS Game</a> / Level 5
-    </div>
+    <div class="breadcrumb"><a href="./">XSS Game</a> / Level 5</div>
     <h1>[5/6] Level 5: DOM-Based XSS</h1>
   </div>
-  
+
   <div class="mission-box">
     <h2>Mission Description</h2>
-    <p>This level demonstrates DOM-based XSS, where the vulnerability exists entirely in client-side code. The application uses <code>location.hash</code> to dynamically update content without proper sanitization.</p>
-    <p><strong>Mission Objective:</strong> Use the URL hash fragment to execute JavaScript.</p>
+    <p>
+      This level demonstrates DOM-based XSS, where the vulnerability exists
+      entirely in client-side code. The application uses
+      <code>location.hash</code> to dynamically update content without proper
+      sanitization.
+    </p>
+    <p>
+      <strong>Mission Objective:</strong> Use the URL hash fragment to execute
+      JavaScript.
+    </p>
   </div>
-  
+
   <div class="url-bar" id="url-display"></div>
-  
+
   <div class="target-frame">
     <h3>Email Signup</h3>
     <form class="signup-form" onsubmit="handleSignup(event)">
-      <input type="email" id="email" placeholder="Enter your email" required>
+      <input type="email" id="email" placeholder="Enter your email" required />
       <button type="submit">Sign Up</button>
     </form>
     <div class="confirmation" id="confirmation"></div>
   </div>
-  
+
   <div id="success-banner" class="success-banner">
     ✓ Level Complete! You successfully exploited a DOM-based XSS vulnerability.
   </div>
-  
+
   <div class="hints-section">
     <h2>Hints</h2>
     <button class="hint-toggle" onclick="toggleHint(1)">Show Hint 1</button>
     <div class="hint-content" id="hint-1">
-      The application reads from <code>location.hash</code> and uses it to display a welcome message. Try adding <code>#welcome</code> to the URL.
+      The application reads from <code>location.hash</code> and uses it to
+      display a welcome message. Try adding <code>#welcome</code> to the URL.
     </div>
-    
+
     <button class="hint-toggle" onclick="toggleHint(2)">Show Hint 2</button>
     <div class="hint-content" id="hint-2">
-      The hash value is being inserted with <code>innerHTML</code>. Can you inject HTML that will execute JavaScript?
+      The hash value is being inserted with <code>innerHTML</code>. Can you
+      inject HTML that will execute JavaScript?
     </div>
-    
+
     <button class="hint-toggle" onclick="toggleHint(3)">Show Hint 3</button>
     <div class="hint-content" id="hint-3">
       Try this URL: <code>#&lt;img src=x onerror="alert('XSS')"&gt;</code>
     </div>
   </div>
-  
+
   <div class="source-section">
-    <button class="source-toggle" onclick="toggleSource()">View Source Code</button>
+    <button class="source-toggle" onclick="toggleSource()">
+      View Source Code
+    </button>
     <div class="source-code" id="source-code">
-      <pre>function checkHash() {
+      <pre>
+function checkHash() {
   if (location.hash) {
     const message = location.hash.substring(1);
     const confirmation = document.getElementById('confirmation');
@@ -274,10 +321,11 @@ title: XSS Game - Level 5
 
 // Check on load and hash change
 window.addEventListener('load', checkHash);
-window.addEventListener('hashchange', checkHash);</pre>
+window.addEventListener('hashchange', checkHash);</pre
+      >
     </div>
   </div>
-  
+
   <div class="nav-buttons">
     <a href="level4.html">← Previous Level</a>
     <a href="level6.html">Next Level →</a>
@@ -286,63 +334,65 @@ window.addEventListener('hashchange', checkHash);</pre>
 
 <script>
   let levelCompleted = false;
-  
+
   // Override alert to detect successful XSS
   const originalAlert = window.alert;
-  window.alert = function(msg) {
+  window.alert = function (msg) {
     if (!levelCompleted) {
       levelCompleted = true;
-      document.getElementById('success-banner').classList.add('show');
-      
-      const completed = JSON.parse(localStorage.getItem('xss-completed') || '[]');
+      document.getElementById("success-banner").classList.add("show");
+
+      const completed = JSON.parse(
+        localStorage.getItem("xss-completed") || "[]",
+      );
       if (!completed.includes(5)) {
         completed.push(5);
-        localStorage.setItem('xss-completed', JSON.stringify(completed));
+        localStorage.setItem("xss-completed", JSON.stringify(completed));
       }
     }
     originalAlert.call(window, msg);
   };
-  
+
   function handleSignup(event) {
     event.preventDefault();
-    const email = document.getElementById('email').value;
-    const confirmation = document.getElementById('confirmation');
-    confirmation.textContent = 'Thanks for signing up, ' + email + '!';
-    confirmation.classList.add('show');
+    const email = document.getElementById("email").value;
+    const confirmation = document.getElementById("confirmation");
+    confirmation.textContent = "Thanks for signing up, " + email + "!";
+    confirmation.classList.add("show");
   }
-  
+
   function checkHash() {
     // Update URL display
-    document.getElementById('url-display').textContent = 
+    document.getElementById("url-display").textContent =
       window.location.pathname + window.location.search + window.location.hash;
-    
+
     if (location.hash) {
       const message = location.hash.substring(1);
-      const confirmation = document.getElementById('confirmation');
-      
+      const confirmation = document.getElementById("confirmation");
+
       // VULNERABLE: DOM-based XSS via location.hash
       confirmation.innerHTML = decodeURIComponent(message);
-      confirmation.classList.add('show');
-      
+      confirmation.classList.add("show");
+
       // Execute any script tags (to simulate server-side rendering)
-      const scripts = confirmation.querySelectorAll('script');
-      scripts.forEach(script => {
+      const scripts = confirmation.querySelectorAll("script");
+      scripts.forEach((script) => {
         eval(script.textContent);
       });
     }
   }
-  
+
   function toggleHint(num) {
     const hint = document.getElementById(`hint-${num}`);
-    hint.classList.toggle('show');
+    hint.classList.toggle("show");
   }
-  
+
   function toggleSource() {
-    const source = document.getElementById('source-code');
-    source.classList.toggle('show');
+    const source = document.getElementById("source-code");
+    source.classList.toggle("show");
   }
-  
+
   // Check on load and hash change
-  window.addEventListener('load', checkHash);
-  window.addEventListener('hashchange', checkHash);
+  window.addEventListener("load", checkHash);
+  window.addEventListener("hashchange", checkHash);
 </script>

@@ -4,96 +4,247 @@ title: Cryptogram
 ---
 
 <style>
-  .puzzle-wrap { max-width: 580px; margin: 2rem auto; padding: 0 1rem; }
-  .puzzle-wrap p.help { text-align: center; color: var(--text-muted); font-size: 0.85rem; margin-bottom: 1rem; }
+  .puzzle-wrap {
+    max-width: 580px;
+    margin: 2rem auto;
+    padding: 0 1rem;
+  }
+  .puzzle-wrap p.help {
+    text-align: center;
+    color: var(--text-muted);
+    font-size: 0.85rem;
+    margin-bottom: 1rem;
+  }
 
   .ciphertext {
-    display: flex; flex-wrap: wrap; gap: 1px 0; justify-content: center;
-    font: 24px/1.8 'Courier New', monospace; letter-spacing: 1px;
-    background: var(--card-bg); padding: 1.25rem 1rem; border: 1px solid var(--border);
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1px 0;
+    justify-content: center;
+    font:
+      24px/1.8 "Courier New",
+      monospace;
+    letter-spacing: 1px;
+    background: var(--card-bg);
+    padding: 1.25rem 1rem;
+    border: 1px solid var(--border);
   }
-  
+
   @media (max-width: 640px) {
     .ciphertext {
       font-size: 20px;
       padding: 1rem 0.75rem;
       letter-spacing: 0.5px;
     }
-    .puzzle-wrap { margin: 1rem auto; }
-    .top-bar { font-size: 12px; }
-    .alpha-row .key { width: 28px; height: 28px; font-size: 12px; }
+    .puzzle-wrap {
+      margin: 1rem auto;
+    }
+    .top-bar {
+      font-size: 12px;
+    }
+    .alpha-row .key {
+      width: 28px;
+      height: 28px;
+      font-size: 12px;
+    }
   }
-  
+
   @media (max-width: 400px) {
-    .ciphertext { font-size: 18px; }
-    .alpha-row .key { width: 24px; height: 24px; font-size: 11px; }
+    .ciphertext {
+      font-size: 18px;
+    }
+    .alpha-row .key {
+      width: 24px;
+      height: 24px;
+      font-size: 11px;
+    }
   }
   .ciphertext .tile {
-    display: inline-flex; flex-direction: column; align-items: center;
-    width: 1.5em; cursor: pointer; padding: 2px 0;
+    display: inline-flex;
+    flex-direction: column;
+    align-items: center;
+    width: 1.5em;
+    cursor: pointer;
+    padding: 2px 0;
   }
-  .ciphertext .tile .cipher { color: #6af; font-weight: 700; }
+  .ciphertext .tile .cipher {
+    color: #6af;
+    font-weight: 700;
+  }
   .ciphertext .tile .plain {
-    font-size: 15px; color: #4c4; min-height: 1.3em;
-    border-bottom: 2px solid var(--border); width: 100%; text-align: center;
+    font-size: 15px;
+    color: #4c4;
+    min-height: 1.3em;
+    border-bottom: 2px solid var(--border);
+    width: 100%;
+    text-align: center;
   }
-  .ciphertext .tile:hover { background: rgba(102,170,255,0.1); }
-  .ciphertext .tile.selected { background: rgba(102,170,255,0.2); }
-  .ciphertext .tile.selected .plain { border-color: #6af; }
-  .ciphertext .tile.solved .cipher { color: #4c4; }
-  .ciphertext .tile.space .plain, .ciphertext .tile.punct .plain { border-color: transparent; }
-  .ciphertext .tile.space .cipher, .ciphertext .tile.punct .cipher { color: var(--text-subtle); }
+  .ciphertext .tile:hover {
+    background: rgba(102, 170, 255, 0.1);
+  }
+  .ciphertext .tile.selected {
+    background: rgba(102, 170, 255, 0.2);
+  }
+  .ciphertext .tile.selected .plain {
+    border-color: #6af;
+  }
+  .ciphertext .tile.solved .cipher {
+    color: #4c4;
+  }
+  .ciphertext .tile.space .plain,
+  .ciphertext .tile.punct .plain {
+    border-color: transparent;
+  }
+  .ciphertext .tile.space .cipher,
+  .ciphertext .tile.punct .cipher {
+    color: var(--text-subtle);
+  }
 
   .alpha-row {
-    display: flex; flex-wrap: wrap; gap: 2px; justify-content: center;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 2px;
+    justify-content: center;
     margin-top: 0.75rem;
   }
   .alpha-row .key {
-    width: 32px; height: 32px; display: flex; align-items: center; justify-content: center;
-    font: 13px 'Courier New', monospace;
-    background: var(--card-bg); border: 1px solid var(--border); cursor: pointer;
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font:
+      13px "Courier New",
+      monospace;
+    background: var(--card-bg);
+    border: 1px solid var(--border);
+    cursor: pointer;
     transition: opacity 0.15s;
   }
-  .alpha-row .key:hover { opacity: 0.6; }
-  .alpha-row .key.used { opacity: 0.25; pointer-events: none; }
-  .alpha-row .key.highlight { border-color: var(--text); background: rgba(102,170,255,0.15); }
+  .alpha-row .key:hover {
+    opacity: 0.6;
+  }
+  .alpha-row .key.used {
+    opacity: 0.25;
+    pointer-events: none;
+  }
+  .alpha-row .key.highlight {
+    border-color: var(--text);
+    background: rgba(102, 170, 255, 0.15);
+  }
 
-
-  .alpha-label { text-align: center; color: var(--text-subtle); font-size: 0.7rem; margin-top: 0.25rem; letter-spacing: 1px; }
+  .alpha-label {
+    text-align: center;
+    color: var(--text-subtle);
+    font-size: 0.7rem;
+    margin-top: 0.25rem;
+    letter-spacing: 1px;
+  }
 
   .top-bar {
-    display: flex; justify-content: space-between; align-items: center;
-    margin-bottom: 0.5rem; font: 14px monospace; color: var(--text-muted);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 0.5rem;
+    font: 14px monospace;
+    color: var(--text-muted);
   }
-  .top-bar .left { display: flex; gap: 0.5rem; align-items: center; }
+  .top-bar .left {
+    display: flex;
+    gap: 0.5rem;
+    align-items: center;
+  }
   .top-bar button {
-    background: var(--card-bg); border: 1px solid var(--border); color: var(--text); 
-    padding: 4px 10px; cursor: pointer; font: 12px sans-serif; transition: opacity 0.2s;
+    background: var(--card-bg);
+    border: 1px solid var(--border);
+    color: var(--text);
+    padding: 4px 10px;
+    cursor: pointer;
+    font: 12px sans-serif;
+    transition: opacity 0.2s;
   }
-  .top-bar button:hover { opacity: 0.6; }
-  .hint { color: var(--text-muted); font-size: 0.85rem; text-align: center; min-height: 1.3em; margin-top: 0.5rem; }
+  .top-bar button:hover {
+    opacity: 0.6;
+  }
+  .hint {
+    color: var(--text-muted);
+    font-size: 0.85rem;
+    text-align: center;
+    min-height: 1.3em;
+    margin-top: 0.5rem;
+  }
 
   .share-btn {
-    background: var(--card-bg); border: 1px solid var(--border); color: var(--text);
-    padding: 6px 12px; cursor: pointer; font: 13px sans-serif; transition: opacity 0.15s;
+    background: var(--card-bg);
+    border: 1px solid var(--border);
+    color: var(--text);
+    padding: 6px 12px;
+    cursor: pointer;
+    font: 13px sans-serif;
+    transition: opacity 0.15s;
   }
-  .share-btn:hover { opacity: 0.6; }
-  .share-btn.copied { border-color: #4c4; color: #4c4; }
+  .share-btn:hover {
+    opacity: 0.6;
+  }
+  .share-btn.copied {
+    border-color: #4c4;
+    color: #4c4;
+  }
 
-  .make-area { margin-top: 1.5rem; text-align: center; }
-  .make-link { color: var(--text-subtle); cursor: pointer; font: 13px sans-serif; }
-  .make-link:hover { opacity: 0.6; }
-  .maker { display: none; margin-top: 0.75rem; text-align: center; }
-  .maker.open { display: block; }
-  .maker input, .maker textarea {
-    width: 100%; max-width: 420px; background: var(--card-bg); border: 1px solid var(--border);
-    color: var(--text); padding: 6px 10px; font: 13px sans-serif;
+  .make-area {
+    margin-top: 1.5rem;
+    text-align: center;
   }
-  .maker textarea { resize: vertical; }
-  .maker input:focus, .maker textarea:focus { outline: none; border-color: var(--text); }
-  .maker label { display: block; color: var(--text-muted); font-size: 0.8rem; margin-top: 0.5rem; margin-bottom: 0.2rem; }
-  .maker .share-row { display: flex; gap: 0.4rem; margin-top: 0.5rem; justify-content: center; }
-  .maker .share-row input { flex: 1; }
+  .make-link {
+    color: var(--text-subtle);
+    cursor: pointer;
+    font: 13px sans-serif;
+  }
+  .make-link:hover {
+    opacity: 0.6;
+  }
+  .maker {
+    display: none;
+    margin-top: 0.75rem;
+    text-align: center;
+  }
+  .maker.open {
+    display: block;
+  }
+  .maker input,
+  .maker textarea {
+    width: 100%;
+    max-width: 420px;
+    background: var(--card-bg);
+    border: 1px solid var(--border);
+    color: var(--text);
+    padding: 6px 10px;
+    font: 13px sans-serif;
+  }
+  .maker textarea {
+    resize: vertical;
+  }
+  .maker input:focus,
+  .maker textarea:focus {
+    outline: none;
+    border-color: var(--text);
+  }
+  .maker label {
+    display: block;
+    color: var(--text-muted);
+    font-size: 0.8rem;
+    margin-top: 0.5rem;
+    margin-bottom: 0.2rem;
+  }
+  .maker .share-row {
+    display: flex;
+    gap: 0.4rem;
+    margin-top: 0.5rem;
+    justify-content: center;
+  }
+  .maker .share-row input {
+    flex: 1;
+  }
 </style>
 
 <div class="puzzle-wrap">
@@ -116,11 +267,15 @@ title: Cryptogram
     <a class="make-link" id="make-link">+ make a puzzle to share</a>
     <div class="maker" id="maker">
       <label>sentence</label>
-      <textarea id="maker-text" rows="2" placeholder="e.g. HELLO WORLD"></textarea>
+      <textarea
+        id="maker-text"
+        rows="2"
+        placeholder="e.g. HELLO WORLD"
+      ></textarea>
       <label>hint (optional)</label>
-      <input id="maker-hint" placeholder="e.g. A common programming phrase">
+      <input id="maker-hint" placeholder="e.g. A common programming phrase" />
       <div class="share-row">
-        <input id="maker-url" readonly placeholder="share URL">
+        <input id="maker-url" readonly placeholder="share URL" />
         <button class="share-btn" id="maker-go" disabled>go</button>
         <button class="share-btn" id="maker-copy">copy</button>
       </div>
@@ -129,35 +284,44 @@ title: Cryptogram
 </div>
 
 <script>
-  let puzzle = { plain: '', tokens: [], types: [], cipherLetters: [], cipherSet: new Set(), orderedCiphers: [] };
+  let puzzle = {
+    plain: "",
+    tokens: [],
+    types: [],
+    cipherLetters: [],
+    cipherSet: new Set(),
+    orderedCiphers: [],
+  };
   let mapping = {}; // plain -> cipher
-  let rev = {};    // cipher -> plain
-  let user = {};   // cipher -> plain (user guesses)
+  let rev = {}; // cipher -> plain
+  let user = {}; // cipher -> plain (user guesses)
   let selected = null;
-  let hintText = '';
+  let hintText = "";
   let selectedIdx = -1;
 
   function shuffle(s) {
-    const a = s.split('');
+    const a = s.split("");
     for (let i = a.length - 1; i > 0; i--) {
       const j = Math.floor(Math.random() * (i + 1));
       [a[i], a[j]] = [a[j], a[i]];
     }
-    return a.join('');
+    return a.join("");
   }
 
   function genCipher(plain) {
-    const alpha = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
-    const letters = plain.toUpperCase().replace(/[^A-Z]/g, '');
+    const alpha = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+    const letters = plain.toUpperCase().replace(/[^A-Z]/g, "");
     const unique = [...new Set(letters)];
-    const unused = alpha.split('').filter(l => !unique.includes(l));
-    const shuffled = shuffle(unused.join(''));
+    const unused = alpha.split("").filter((l) => !unique.includes(l));
+    const shuffled = shuffle(unused.join(""));
     const map = {};
-    const pool = alpha.split('').filter(l => !unique.includes(l));
+    const pool = alpha.split("").filter((l) => !unique.includes(l));
     const used = new Set();
     for (const l of unique) {
       let c;
-      do { c = alpha[Math.floor(Math.random() * 26)]; } while (c === l || used.has(c));
+      do {
+        c = alpha[Math.floor(Math.random() * 26)];
+      } while (c === l || used.has(c));
       used.add(c);
       map[l] = c;
     }
@@ -165,15 +329,17 @@ title: Cryptogram
   }
 
   function loadPuzzle(data) {
-    let plain = 'HELLO WORLD THIS IS A CRYPTOGRAM PUZZLE';
-    hintText = '';
+    let plain = "HELLO WORLD THIS IS A CRYPTOGRAM PUZZLE";
+    hintText = "";
     if (data) {
       try {
         const obj = JSON.parse(atob(data));
         if (obj.text) plain = obj.text.toUpperCase();
         if (obj.hint) hintText = obj.hint;
       } catch {
-        try { plain = atob(data).toUpperCase(); } catch {}
+        try {
+          plain = atob(data).toUpperCase();
+        } catch {}
       }
     }
 
@@ -181,40 +347,56 @@ title: Cryptogram
     rev = {};
     for (const [k, v] of Object.entries(mapping)) rev[v] = k;
 
-    const tokens = [], types = [];
+    const tokens = [],
+      types = [];
     for (const ch of plain) {
-      if (ch >= 'A' && ch <= 'Z') { tokens.push(mapping[ch]); types.push('letter'); }
-      else if (ch === ' ') { tokens.push(' '); types.push('space'); }
-      else { tokens.push(ch); types.push('punct'); }
+      if (ch >= "A" && ch <= "Z") {
+        tokens.push(mapping[ch]);
+        types.push("letter");
+      } else if (ch === " ") {
+        tokens.push(" ");
+        types.push("space");
+      } else {
+        tokens.push(ch);
+        types.push("punct");
+      }
     }
 
     const cipherSet = new Set(Object.values(mapping));
     const orderedCiphers = [];
     for (const t of tokens) {
-      if (cipherSet.has(t) && !orderedCiphers.includes(t)) orderedCiphers.push(t);
+      if (cipherSet.has(t) && !orderedCiphers.includes(t))
+        orderedCiphers.push(t);
     }
     user = {};
     for (const c of cipherSet) user[c] = null;
     selected = null;
     selectedIdx = -1;
 
-    puzzle = { plain, tokens, types, cipherLetters: [...cipherSet], cipherSet, orderedCiphers };
+    puzzle = {
+      plain,
+      tokens,
+      types,
+      cipherLetters: [...cipherSet],
+      cipherSet,
+      orderedCiphers,
+    };
     render();
     renderAlphabet();
     updateSolved();
-    document.getElementById('hint-area').textContent = hintText || '';
+    document.getElementById("hint-area").textContent = hintText || "";
   }
 
   function getData() {
-    const p = new URLSearchParams(window.location.search).get('p');
-    return p || '';
+    const p = new URLSearchParams(window.location.search).get("p");
+    return p || "";
   }
 
   function setData(d) {
     const url = new URL(window.location);
-    if (d) url.searchParams.set('p', d);
-    else url.searchParams.delete('p');
-    window.history.replaceState({}, '', url);
+    if (d) url.searchParams.set("p", d);
+    else url.searchParams.delete("p");
+    window.history.replaceState({}, "", url);
   }
 
   function assignPlain(cipher, plain) {
@@ -236,12 +418,16 @@ title: Cryptogram
 
   function selectCipher(idx) {
     if (idx < 0 || idx >= puzzle.orderedCiphers.length) return;
-    if (selectedIdx === idx) { clearSelection(); return; }
+    if (selectedIdx === idx) {
+      clearSelection();
+      return;
+    }
     selectedIdx = idx;
     selected = puzzle.orderedCiphers[idx];
     render();
     renderAlphabet();
-    document.getElementById('hint-area').textContent = 'press a letter key to map, \u2190\u2192 to navigate';
+    document.getElementById("hint-area").textContent =
+      "press a letter key to map, \u2190\u2192 to navigate";
   }
 
   function clearSelection() {
@@ -249,72 +435,80 @@ title: Cryptogram
     selectedIdx = -1;
     render();
     renderAlphabet();
-    document.getElementById('hint-area').textContent = hintText || '';
+    document.getElementById("hint-area").textContent = hintText || "";
   }
 
   function giveHint() {
-    const unsolved = Object.entries(mapping).filter(([plain, cipher]) => !user[cipher]);
+    const unsolved = Object.entries(mapping).filter(
+      ([plain, cipher]) => !user[cipher],
+    );
     if (unsolved.length === 0) return;
-    const [plain, cipher] = unsolved[Math.floor(Math.random() * unsolved.length)];
+    const [plain, cipher] =
+      unsolved[Math.floor(Math.random() * unsolved.length)];
     assignPlain(cipher, plain);
     // reselect this cipher so user sees what was revealed
     const idx = puzzle.orderedCiphers.indexOf(cipher);
     if (idx !== -1) selectCipher(idx);
-    else { render(); renderAlphabet(); updateSolved(); }
+    else {
+      render();
+      renderAlphabet();
+      updateSolved();
+    }
   }
 
   function updateSolved() {
     const total = puzzle.cipherLetters.length;
-    const solved = Object.values(user).filter(v => v !== null).length;
-    document.getElementById('solved-count').textContent = solved + ' / ' + total;
+    const solved = Object.values(user).filter((v) => v !== null).length;
+    document.getElementById("solved-count").textContent =
+      solved + " / " + total;
     if (solved === total && total > 0) {
-      document.getElementById('hint-area').textContent = 'solved!';
+      document.getElementById("hint-area").textContent = "solved!";
     }
   }
 
   function render() {
-    const el = document.getElementById('ciphertext');
-    el.innerHTML = '';
+    const el = document.getElementById("ciphertext");
+    el.innerHTML = "";
 
     let wordTiles = [];
     function flushWord() {
       if (wordTiles.length === 0) return;
-      const wrap = document.createElement('span');
-      wrap.style.cssText = 'display:inline-flex;white-space:nowrap';
+      const wrap = document.createElement("span");
+      wrap.style.cssText = "display:inline-flex;white-space:nowrap";
       for (const t of wordTiles) wrap.appendChild(t);
       el.appendChild(wrap);
       wordTiles = [];
     }
 
     puzzle.tokens.forEach((tok, i) => {
-      const tile = document.createElement('span');
-      tile.className = 'tile';
+      const tile = document.createElement("span");
+      tile.className = "tile";
       const type = puzzle.types[i];
-      if (type === 'space') tile.classList.add('space');
-      else if (type === 'punct') tile.classList.add('punct');
+      if (type === "space") tile.classList.add("space");
+      else if (type === "punct") tile.classList.add("punct");
 
-      const cipherSpan = document.createElement('span');
-      cipherSpan.className = 'cipher';
+      const cipherSpan = document.createElement("span");
+      cipherSpan.className = "cipher";
       cipherSpan.textContent = tok;
       tile.appendChild(cipherSpan);
 
-      const plainSpan = document.createElement('span');
-      plainSpan.className = 'plain';
-      if (type === 'letter') {
-        const guess = user[tok] || '';
+      const plainSpan = document.createElement("span");
+      plainSpan.className = "plain";
+      if (type === "letter") {
+        const guess = user[tok] || "";
         plainSpan.textContent = guess;
-        if (guess) tile.classList.add('solved');
-        if (selected === tok) tile.classList.add('selected');
-        tile.addEventListener('click', () => {
+        if (guess) tile.classList.add("solved");
+        if (selected === tok) tile.classList.add("selected");
+        tile.addEventListener("click", () => {
           const idx = puzzle.orderedCiphers.indexOf(tok);
           selectCipher(idx);
         });
         wordTiles.push(tile);
       } else {
         flushWord();
-        if (type === 'space') {
-          const sp = document.createElement('span');
-          sp.style.cssText = 'display:inline-block;width:0.6em';
+        if (type === "space") {
+          const sp = document.createElement("span");
+          sp.style.cssText = "display:inline-block;width:0.6em";
           el.appendChild(sp);
         } else {
           el.appendChild(tile);
@@ -326,123 +520,148 @@ title: Cryptogram
   }
 
   function renderAlphabet() {
-    const alpha = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
-    const row = document.getElementById('plain-row');
-    row.innerHTML = '';
-    const used = new Set(Object.values(user).filter(v => v));
+    const alpha = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+    const row = document.getElementById("plain-row");
+    row.innerHTML = "";
+    const used = new Set(Object.values(user).filter((v) => v));
 
     for (const l of alpha) {
-      const key = document.createElement('span');
-      key.className = 'key';
+      const key = document.createElement("span");
+      key.className = "key";
       key.textContent = l;
 
       // highlight if this is the guessed plain for selected cipher
-      if (selected && user[selected] === l) key.classList.add('highlight');
+      if (selected && user[selected] === l) key.classList.add("highlight");
 
       // mark used letters
-      if (used.has(l)) key.classList.add('used');
+      if (used.has(l)) key.classList.add("used");
 
-      key.addEventListener('click', () => {
+      key.addEventListener("click", () => {
         if (selected) assignPlain(selected, l);
       });
       row.appendChild(key);
     }
   }
 
-  document.addEventListener('keydown', e => {
-    if (e.key === 'ArrowLeft' || e.key === 'ArrowRight') {
+  document.addEventListener("keydown", (e) => {
+    if (e.key === "ArrowLeft" || e.key === "ArrowRight") {
       if (puzzle.orderedCiphers.length === 0) return;
-      if (selectedIdx === -1) { selectCipher(0); e.preventDefault(); return; }
-      const dir = e.key === 'ArrowLeft' ? -1 : 1;
-      const next = (selectedIdx + dir + puzzle.orderedCiphers.length) % puzzle.orderedCiphers.length;
+      if (selectedIdx === -1) {
+        selectCipher(0);
+        e.preventDefault();
+        return;
+      }
+      const dir = e.key === "ArrowLeft" ? -1 : 1;
+      const next =
+        (selectedIdx + dir + puzzle.orderedCiphers.length) %
+        puzzle.orderedCiphers.length;
       selectCipher(next);
       e.preventDefault();
       return;
     }
-    if (e.key >= 'a' && e.key <= 'z' && selected) {
+    if (e.key >= "a" && e.key <= "z" && selected) {
       assignPlain(selected, e.key.toUpperCase());
       e.preventDefault();
       // auto-advance to next unsolved cipher
-      const nextUnsolved = puzzle.orderedCiphers.findIndex((c, i) => i !== selectedIdx && !user[c]);
+      const nextUnsolved = puzzle.orderedCiphers.findIndex(
+        (c, i) => i !== selectedIdx && !user[c],
+      );
       if (nextUnsolved !== -1) selectCipher(nextUnsolved);
       return;
     }
-    if (e.key === 'Backspace' && selected) {
+    if (e.key === "Backspace" && selected) {
       user[selected] = null;
       rev = {};
       for (const [c, p] of Object.entries(user)) if (p) rev[c] = p;
       render();
       renderAlphabet();
       updateSolved();
-      document.getElementById('hint-area').textContent = hintText || '';
+      document.getElementById("hint-area").textContent = hintText || "";
       e.preventDefault();
     }
-    if (e.key === 'Escape') clearSelection();
+    if (e.key === "Escape") clearSelection();
   });
 
-  document.getElementById('reset-btn').addEventListener('click', () => {
+  document.getElementById("reset-btn").addEventListener("click", () => {
     const d = getData();
     loadPuzzle(d);
     setData(d);
   });
-  document.getElementById('hint-btn').addEventListener('click', giveHint);
+  document.getElementById("hint-btn").addEventListener("click", giveHint);
 
   // maker
-  document.getElementById('make-link').addEventListener('click', () => {
-    document.getElementById('maker').classList.toggle('open');
+  document.getElementById("make-link").addEventListener("click", () => {
+    document.getElementById("maker").classList.toggle("open");
   });
   function updateMakerUrl() {
-    const text = document.getElementById('maker-text').value.trim();
-    const hint = document.getElementById('maker-hint').value.trim();
-    const go = document.getElementById('maker-go');
+    const text = document.getElementById("maker-text").value.trim();
+    const hint = document.getElementById("maker-hint").value.trim();
+    const go = document.getElementById("maker-go");
     if (text) {
       const obj = { text };
       if (hint) obj.hint = hint;
       const encoded = btoa(JSON.stringify(obj));
-      const url = window.location.origin + window.location.pathname + '?p=' + encoded;
-      document.getElementById('maker-url').value = url;
+      const url =
+        window.location.origin + window.location.pathname + "?p=" + encoded;
+      document.getElementById("maker-url").value = url;
       go.disabled = false;
     } else {
-      document.getElementById('maker-url').value = '';
+      document.getElementById("maker-url").value = "";
       go.disabled = true;
     }
   }
-  document.getElementById('maker-text').addEventListener('input', updateMakerUrl);
-  document.getElementById('maker-hint').addEventListener('input', updateMakerUrl);
-  document.getElementById('maker-copy').addEventListener('click', () => {
-    const input = document.getElementById('maker-url');
+  document
+    .getElementById("maker-text")
+    .addEventListener("input", updateMakerUrl);
+  document
+    .getElementById("maker-hint")
+    .addEventListener("input", updateMakerUrl);
+  document.getElementById("maker-copy").addEventListener("click", () => {
+    const input = document.getElementById("maker-url");
     input.select();
     navigator.clipboard.writeText(input.value);
-    const btn = document.getElementById('maker-copy');
-    btn.textContent = 'copied!';
-    btn.classList.add('copied');
-    setTimeout(() => { btn.textContent = 'copy'; btn.classList.remove('copied'); }, 2000);
+    const btn = document.getElementById("maker-copy");
+    btn.textContent = "copied!";
+    btn.classList.add("copied");
+    setTimeout(() => {
+      btn.textContent = "copy";
+      btn.classList.remove("copied");
+    }, 2000);
   });
-  document.getElementById('maker-go').addEventListener('click', () => {
-    const url = document.getElementById('maker-url').value;
-    if (url) window.open(url, '_blank');
+  document.getElementById("maker-go").addEventListener("click", () => {
+    const url = document.getElementById("maker-url").value;
+    if (url) window.open(url, "_blank");
   });
-
 
   // confetti
-  const confettiCanvas = document.createElement('canvas');
-  confettiCanvas.style.cssText = 'position:fixed;top:0;left:0;width:100vw;height:100vh;pointer-events:none;z-index:999';
+  const confettiCanvas = document.createElement("canvas");
+  confettiCanvas.style.cssText =
+    "position:fixed;top:0;left:0;width:100vw;height:100vh;pointer-events:none;z-index:999";
   let confettiCtx = null;
   let confettiPieces = [];
   let confettiAnim = null;
 
   function startConfetti() {
     if (!confettiCtx) {
-      confettiCtx = confettiCanvas.getContext('2d');
+      confettiCtx = confettiCanvas.getContext("2d");
       document.body.appendChild(confettiCanvas);
     }
-    const W = window.innerWidth, H = window.innerHeight;
-    confettiCanvas.width = W; confettiCanvas.height = H;
+    const W = window.innerWidth,
+      H = window.innerHeight;
+    confettiCanvas.width = W;
+    confettiCanvas.height = H;
     confettiPieces = Array.from({ length: 120 }, () => ({
-      x: Math.random() * W, y: Math.random() * -H, w: 6 + Math.random() * 4, h: 4 + Math.random() * 4,
-      vx: (Math.random() - 0.5) * 2, vy: 2 + Math.random() * 3,
-      color: ['#f44','#4c4','#6af','#ff0','#f4f','#0ff','#fa0'][Math.floor(Math.random() * 7)],
-      rot: Math.random() * Math.PI * 2, rv: (Math.random() - 0.5) * 0.1,
+      x: Math.random() * W,
+      y: Math.random() * -H,
+      w: 6 + Math.random() * 4,
+      h: 4 + Math.random() * 4,
+      vx: (Math.random() - 0.5) * 2,
+      vy: 2 + Math.random() * 3,
+      color: ["#f44", "#4c4", "#6af", "#ff0", "#f4f", "#0ff", "#fa0"][
+        Math.floor(Math.random() * 7)
+      ],
+      rot: Math.random() * Math.PI * 2,
+      rv: (Math.random() - 0.5) * 0.1,
     }));
     if (confettiAnim) cancelAnimationFrame(confettiAnim);
     let frame = 0;
@@ -451,7 +670,10 @@ title: Cryptogram
       confettiCtx.clearRect(0, 0, W, H);
       let alive = false;
       for (const p of confettiPieces) {
-        p.x += p.vx; p.y += p.vy; p.vy += 0.02; p.rot += p.rv;
+        p.x += p.vx;
+        p.y += p.vy;
+        p.vy += 0.02;
+        p.rot += p.rv;
         if (p.y > H + 20) continue;
         alive = true;
         confettiCtx.save();
@@ -463,53 +685,57 @@ title: Cryptogram
         confettiCtx.restore();
       }
       if (alive && frame < 300) confettiAnim = requestAnimationFrame(draw);
-      else { confettiCtx.clearRect(0, 0, W, H); confettiAnim = null; }
+      else {
+        confettiCtx.clearRect(0, 0, W, H);
+        confettiAnim = null;
+      }
     }
     draw();
   }
 
   // hook into solved
   const origUpdateSolved = updateSolved;
-  updateSolved = function() {
+  updateSolved = function () {
     origUpdateSolved();
     const total = puzzle.cipherLetters.length;
-    const solved = Object.values(user).filter(v => v !== null).length;
+    const solved = Object.values(user).filter((v) => v !== null).length;
     if (solved === total && total > 0) startConfetti();
   };
 
   // Hidden input for mobile keyboard
-  const hiddenInput = document.createElement('input');
-  hiddenInput.setAttribute('autocomplete', 'off');
-  hiddenInput.setAttribute('autocorrect', 'off');
-  hiddenInput.setAttribute('autocapitalize', 'off');
-  hiddenInput.setAttribute('spellcheck', 'false');
-  hiddenInput.style.cssText = 'position:fixed;left:-9999px;top:-9999px;width:1px;height:1px;opacity:0;pointer-events:none';
+  const hiddenInput = document.createElement("input");
+  hiddenInput.setAttribute("autocomplete", "off");
+  hiddenInput.setAttribute("autocorrect", "off");
+  hiddenInput.setAttribute("autocapitalize", "off");
+  hiddenInput.setAttribute("spellcheck", "false");
+  hiddenInput.style.cssText =
+    "position:fixed;left:-9999px;top:-9999px;width:1px;height:1px;opacity:0;pointer-events:none";
   document.body.appendChild(hiddenInput);
 
-  hiddenInput.addEventListener('input', () => {
+  hiddenInput.addEventListener("input", () => {
     const val = hiddenInput.value;
     if (val.length > 0) {
       const ch = val[val.length - 1].toUpperCase();
-      if (ch >= 'A' && ch <= 'Z' && selected) {
+      if (ch >= "A" && ch <= "Z" && selected) {
         assignPlain(selected, ch);
       }
-      hiddenInput.value = '';
+      hiddenInput.value = "";
     }
   });
 
-  hiddenInput.addEventListener('blur', () => {
+  hiddenInput.addEventListener("blur", () => {
     // don't clear selection; user may tap outside
   });
 
   // Wrap selectCipher to focus the hidden input (brings up mobile keyboard)
   const origSelectCipher = selectCipher;
-  selectCipher = function(idx) {
+  selectCipher = function (idx) {
     origSelectCipher(idx);
     if (selected) hiddenInput.focus();
   };
 
   const origClearSelection = clearSelection;
-  clearSelection = function() {
+  clearSelection = function () {
     origClearSelection();
     hiddenInput.blur();
   };

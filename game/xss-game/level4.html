@@ -4,62 +4,76 @@ title: XSS Game - Level 4
 ---
 
 <style>
-  .level-wrap { max-width: 780px; margin: 0 auto; }
-  .level-header { margin-bottom: 2rem; }
-  .level-header h1 { font-size: 1.75rem; margin-bottom: 0.5rem; }
-  .level-header .breadcrumb { font-size: 0.85rem; color: var(--text-muted); margin-bottom: 1rem; }
-  .level-header .breadcrumb a { color: var(--text-muted); }
-  
+  .level-wrap {
+    max-width: 780px;
+    margin: 0 auto;
+  }
+  .level-header {
+    margin-bottom: 2rem;
+  }
+  .level-header h1 {
+    font-size: 1.75rem;
+    margin-bottom: 0.5rem;
+  }
+  .level-header .breadcrumb {
+    font-size: 0.85rem;
+    color: var(--text-muted);
+    margin-bottom: 1rem;
+  }
+  .level-header .breadcrumb a {
+    color: var(--text-muted);
+  }
+
   .mission-box {
     background: var(--card-bg);
     border: 1px solid var(--border);
     padding: 1.5rem;
     margin-bottom: 2rem;
   }
-  
+
   .mission-box h2 {
     font-size: 1.1rem;
     font-weight: 400;
     margin-bottom: 0.75rem;
     color: var(--text-heading);
   }
-  
+
   .mission-box p {
     font-size: 0.9rem;
     color: var(--text-muted);
     margin-bottom: 0.5rem;
     line-height: 1.5;
   }
-  
+
   .target-frame {
     background: var(--bg);
     border: 1px solid var(--border);
     padding: 2rem;
     margin: 2rem 0;
   }
-  
+
   .target-frame h3 {
     font-size: 1.3rem;
     font-weight: 400;
     margin-bottom: 1.5rem;
     text-align: center;
   }
-  
+
   .timer-display {
     text-align: center;
     font-size: 3rem;
-    font-family: 'Courier New', monospace;
+    font-family: "Courier New", monospace;
     color: var(--text-heading);
     margin: 2rem 0;
   }
-  
+
   .timer-controls {
     display: flex;
     gap: 1rem;
     justify-content: center;
     margin-top: 1.5rem;
   }
-  
+
   .timer-controls input {
     width: 100px;
     padding: 0.75rem;
@@ -70,12 +84,12 @@ title: XSS Game - Level 4
     font-family: inherit;
     text-align: center;
   }
-  
+
   .timer-controls input:focus {
     outline: none;
     border-color: var(--text);
   }
-  
+
   .timer-controls button {
     padding: 0.75rem 1.5rem;
     background: var(--card-bg);
@@ -86,34 +100,36 @@ title: XSS Game - Level 4
     font-family: inherit;
     transition: opacity 0.2s;
   }
-  
-  .timer-controls button:hover { opacity: 0.6; }
-  
+
+  .timer-controls button:hover {
+    opacity: 0.6;
+  }
+
   .url-bar {
     background: var(--card-bg);
     border: 1px solid var(--border);
     padding: 0.75rem;
     margin-bottom: 1rem;
-    font-family: 'Courier New', monospace;
+    font-family: "Courier New", monospace;
     font-size: 0.85rem;
     color: var(--text-muted);
     word-break: break-all;
   }
-  
+
   .hints-section {
     background: var(--card-bg);
     border: 1px solid var(--border);
     padding: 1.5rem;
     margin-top: 2rem;
   }
-  
+
   .hints-section h2 {
     font-size: 1.1rem;
     font-weight: 400;
     margin-bottom: 1rem;
     color: var(--text-heading);
   }
-  
+
   .hint-toggle {
     background: var(--card-bg);
     border: 1px solid var(--border);
@@ -125,9 +141,11 @@ title: XSS Game - Level 4
     margin-bottom: 0.5rem;
     transition: opacity 0.2s;
   }
-  
-  .hint-toggle:hover { opacity: 0.6; }
-  
+
+  .hint-toggle:hover {
+    opacity: 0.6;
+  }
+
   .hint-content {
     display: none;
     margin-top: 0.75rem;
@@ -137,11 +155,15 @@ title: XSS Game - Level 4
     font-size: 0.9rem;
     color: var(--text-muted);
   }
-  
-  .hint-content.show { display: block; }
-  
-  .source-section { margin-top: 2rem; }
-  
+
+  .hint-content.show {
+    display: block;
+  }
+
+  .source-section {
+    margin-top: 2rem;
+  }
+
   .source-toggle {
     background: var(--card-bg);
     border: 1px solid var(--border);
@@ -152,9 +174,11 @@ title: XSS Game - Level 4
     font-family: inherit;
     transition: opacity 0.2s;
   }
-  
-  .source-toggle:hover { opacity: 0.6; }
-  
+
+  .source-toggle:hover {
+    opacity: 0.6;
+  }
+
   .source-code {
     display: none;
     background: var(--card-bg);
@@ -163,16 +187,18 @@ title: XSS Game - Level 4
     margin-top: 1rem;
     overflow-x: auto;
   }
-  
-  .source-code.show { display: block; }
-  
+
+  .source-code.show {
+    display: block;
+  }
+
   .source-code pre {
-    font-family: 'Courier New', monospace;
+    font-family: "Courier New", monospace;
     font-size: 0.85rem;
     color: var(--text);
     line-height: 1.5;
   }
-  
+
   .nav-buttons {
     display: flex;
     justify-content: space-between;
@@ -180,7 +206,7 @@ title: XSS Game - Level 4
     padding-top: 2rem;
     border-top: 1px solid var(--border-subtle);
   }
-  
+
   .nav-buttons a {
     padding: 0.75rem 1.5rem;
     background: var(--card-bg);
@@ -190,9 +216,11 @@ title: XSS Game - Level 4
     font-size: 0.9rem;
     transition: opacity 0.2s;
   }
-  
-  .nav-buttons a:hover { opacity: 0.6; }
-  
+
+  .nav-buttons a:hover {
+    opacity: 0.6;
+  }
+
   .success-banner {
     display: none;
     background: #4c4;
@@ -202,68 +230,90 @@ title: XSS Game - Level 4
     margin: 2rem 0;
     font-weight: 400;
   }
-  
-  .success-banner.show { display: block; }
-  
+
+  .success-banner.show {
+    display: block;
+  }
+
   @media (max-width: 640px) {
-    .level-header h1 { font-size: 1.5rem; }
-    .target-frame { padding: 1.5rem 1rem; }
-    .timer-display { font-size: 2rem; }
-    .timer-controls { flex-direction: column; align-items: center; }
+    .level-header h1 {
+      font-size: 1.5rem;
+    }
+    .target-frame {
+      padding: 1.5rem 1rem;
+    }
+    .timer-display {
+      font-size: 2rem;
+    }
+    .timer-controls {
+      flex-direction: column;
+      align-items: center;
+    }
   }
 </style>
 
 <div class="level-wrap">
   <div class="level-header">
-    <div class="breadcrumb">
-      <a href="./">XSS Game</a> / Level 4
-    </div>
+    <div class="breadcrumb"><a href="./">XSS Game</a> / Level 4</div>
     <h1>[4/6] Level 4: Script Context</h1>
   </div>
-  
+
   <div class="mission-box">
     <h2>Mission Description</h2>
-    <p>This level demonstrates XSS in JavaScript context. User input is being placed directly into a JavaScript string without proper escaping. You need to break out of the string context to execute your own code.</p>
-    <p><strong>Mission Objective:</strong> Manipulate the URL parameter to execute JavaScript from within the script context.</p>
+    <p>
+      This level demonstrates XSS in JavaScript context. User input is being
+      placed directly into a JavaScript string without proper escaping. You need
+      to break out of the string context to execute your own code.
+    </p>
+    <p>
+      <strong>Mission Objective:</strong> Manipulate the URL parameter to
+      execute JavaScript from within the script context.
+    </p>
   </div>
-  
+
   <div class="url-bar" id="url-display"></div>
-  
+
   <div class="target-frame">
     <h3>Timer Application</h3>
     <div class="timer-display" id="timer">00:00</div>
     <div class="timer-controls">
-      <input type="number" id="seconds" placeholder="Seconds" value="60">
+      <input type="number" id="seconds" placeholder="Seconds" value="60" />
       <button onclick="startTimer()">Start Timer</button>
     </div>
   </div>
-  
+
   <div id="success-banner" class="success-banner">
     ✓ Level Complete! You successfully exploited a JavaScript string injection.
   </div>
-  
+
   <div class="hints-section">
     <h2>Hints</h2>
     <button class="hint-toggle" onclick="toggleHint(1)">Show Hint 1</button>
     <div class="hint-content" id="hint-1">
-      The URL parameter <code>?timer=</code> is being inserted into a JavaScript string. Look at the source code to see how it's used.
+      The URL parameter <code>?timer=</code> is being inserted into a JavaScript
+      string. Look at the source code to see how it's used.
     </div>
-    
+
     <button class="hint-toggle" onclick="toggleHint(2)">Show Hint 2</button>
     <div class="hint-content" id="hint-2">
-      You need to escape the string context first. Use a single quote (<code>'</code>) to close the string, then a semicolon (<code>;</code>) to end the statement.
+      You need to escape the string context first. Use a single quote
+      (<code>'</code>) to close the string, then a semicolon (<code>;</code>) to
+      end the statement.
     </div>
-    
+
     <button class="hint-toggle" onclick="toggleHint(3)">Show Hint 3</button>
     <div class="hint-content" id="hint-3">
       Try this URL: <code>?timer=';alert('XSS');//</code>
     </div>
   </div>
-  
+
   <div class="source-section">
-    <button class="source-toggle" onclick="toggleSource()">View Source Code</button>
+    <button class="source-toggle" onclick="toggleSource()">
+      View Source Code
+    </button>
     <div class="source-code" id="source-code">
-      <pre>function initTimer() {
+      <pre>
+function initTimer() {
   const params = new URLSearchParams(window.location.search);
   const timerValue = params.get('timer') || '60';
   
@@ -275,10 +325,11 @@ title: XSS Game - Level 4
   }
 }
 
-initTimer();</pre>
+initTimer();</pre
+      >
     </div>
   </div>
-  
+
   <div class="nav-buttons">
     <a href="level3.html">← Previous Level</a>
     <a href="level5.html">Next Level →</a>
@@ -288,73 +339,75 @@ initTimer();</pre>
 <script>
   let levelCompleted = false;
   let timerInterval = null;
-  
+
   // Override alert to detect successful XSS
   const originalAlert = window.alert;
-  window.alert = function(msg) {
+  window.alert = function (msg) {
     if (!levelCompleted) {
       levelCompleted = true;
-      document.getElementById('success-banner').classList.add('show');
-      
-      const completed = JSON.parse(localStorage.getItem('xss-completed') || '[]');
+      document.getElementById("success-banner").classList.add("show");
+
+      const completed = JSON.parse(
+        localStorage.getItem("xss-completed") || "[]",
+      );
       if (!completed.includes(4)) {
         completed.push(4);
-        localStorage.setItem('xss-completed', JSON.stringify(completed));
+        localStorage.setItem("xss-completed", JSON.stringify(completed));
       }
     }
     originalAlert.call(window, msg);
   };
-  
+
   function initTimer() {
     const params = new URLSearchParams(window.location.search);
-    const timerValue = params.get('timer') || '60';
-    
+    const timerValue = params.get("timer") || "60";
+
     // Update URL display
-    document.getElementById('url-display').textContent = 
+    document.getElementById("url-display").textContent =
       window.location.pathname + window.location.search;
-    
+
     // VULNERABLE: User input in JavaScript string without escaping
     try {
       eval("var defaultTime = '" + timerValue + "';");
-      if (typeof defaultTime !== 'undefined') {
-        document.getElementById('seconds').value = defaultTime;
+      if (typeof defaultTime !== "undefined") {
+        document.getElementById("seconds").value = defaultTime;
       }
-    } catch(e) {
+    } catch (e) {
       // Silently fail
     }
   }
-  
+
   function startTimer() {
     if (timerInterval) clearInterval(timerInterval);
-    
-    let seconds = parseInt(document.getElementById('seconds').value) || 0;
-    const display = document.getElementById('timer');
-    
+
+    let seconds = parseInt(document.getElementById("seconds").value) || 0;
+    const display = document.getElementById("timer");
+
     timerInterval = setInterval(() => {
       if (seconds <= 0) {
         clearInterval(timerInterval);
-        display.textContent = 'DONE!';
+        display.textContent = "DONE!";
         return;
       }
-      
+
       seconds--;
       const mins = Math.floor(seconds / 60);
       const secs = seconds % 60;
-      display.textContent = 
-        String(mins).padStart(2, '0') + ':' + String(secs).padStart(2, '0');
+      display.textContent =
+        String(mins).padStart(2, "0") + ":" + String(secs).padStart(2, "0");
     }, 1000);
   }
-  
+
   function toggleHint(num) {
     const hint = document.getElementById(`hint-${num}`);
-    hint.classList.toggle('show');
+    hint.classList.toggle("show");
   }
-  
+
   function toggleSource() {
-    const source = document.getElementById('source-code');
-    source.classList.toggle('show');
+    const source = document.getElementById("source-code");
+    source.classList.toggle("show");
   }
-  
+
   // Initial setup
   initTimer();
 </script>

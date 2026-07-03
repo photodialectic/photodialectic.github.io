@@ -81,6 +81,7 @@ The site uses CSS custom properties (variables) to support light and dark themes
 ## Design Philosophy
 
 The design emphasizes:
+
 - **Minimalism:** Clean layouts with plenty of whitespace
 - **Typography:** Helvetica Neue for a classic, readable look
 - **Borders:** Thin 1px borders instead of shadows or heavy styles
