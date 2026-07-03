@@ -406,61 +406,28 @@ description: A visual guide to perceptual image hashing using the average hash m
         align-items: center;
         justify-content: center;
       }
-      .hamming-compare {
+      .hamming-grids {
         display: flex;
-        gap: 0.5rem;
-        font-family: monospace;
-        font-size: 0.8rem;
-      }
-      .hamming-bit {
-        width: 20px;
-        height: 30px;
-        display: flex;
+        gap: 2rem;
         align-items: center;
-        justify-content: center;
-        border: 1px solid var(--border);
-      }
-      .hamming-bit.diff {
-        background: #ff4444;
-        color: white;
       }
       .hamming-result {
         font-size: 1.1rem;
-        color: var(--text-muted);
+        color: var(--text-heading);
+        text-align: center;
+        padding: 0.75rem 1rem;
+        border: 1px solid var(--border);
+        background: var(--card-bg);
       }
     </style>
     <div class="hamming-demo">
-      <div>
-        <div class="hamming-compare" id="hash1">
-          <div class="hamming-bit">0</div>
-          <div class="hamming-bit">1</div>
-          <div class="hamming-bit diff">0</div>
-          <div class="hamming-bit">0</div>
-          <div class="hamming-bit">1</div>
-          <div class="hamming-bit diff">0</div>
-          <div class="hamming-bit">0</div>
-        </div>
-        <div class="hamming-compare" id="hash2" style="margin-top: 0.5rem">
-          <div class="hamming-bit">0</div>
-          <div class="hamming-bit">1</div>
-          <div class="hamming-bit diff">1</div>
-          <div class="hamming-bit">0</div>
-          <div class="hamming-bit">1</div>
-          <div class="hamming-bit diff">1</div>
-          <div class="hamming-bit">0</div>
-        </div>
+      <div class="hamming-grids">
+        <canvas id="hammingCanvas1" width="240" height="240"></canvas>
+        <canvas id="hammingCanvas2" width="240" height="240"></canvas>
       </div>
-      <div class="hamming-result">Hamming Distance: <strong>2</strong></div>
-      <p
-        style="
-          font-size: 0.85rem;
-          color: var(--text-subtle);
-          text-align: center;
-          max-width: 300px;
-        "
-      >
-        Only 2 bits differ, indicating these images are very similar
-      </p>
+      <div class="hamming-result" id="hammingDistance">
+        Hamming Distance: <strong>4</strong>
+      </div>
     </div>
   </div>
 </div>
@@ -1299,4 +1266,99 @@ description: A visual guide to perceptual image hashing using the average hash m
 
     setTimeout(animateNibble, 500);
   }
+
+  function processHammingDistance() {
+    const canvas1 = document.getElementById("hammingCanvas1");
+    const canvas2 = document.getElementById("hammingCanvas2");
+    if (!canvas1 || !canvas2) return;
+
+    const ctx1 = canvas1.getContext("2d");
+    const ctx2 = canvas2.getContext("2d");
+
+    // Create two similar hashes with exactly 4 bits different
+    const hash1 = [
+      1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 1,
+      0, 0, 1, 1, 0, 0, 0, 1, 1, 0, 1, 1, 1, 0, 0, 1, 1, 1, 1, 1, 1, 1, 0, 1, 1,
+      0, 1, 1, 1, 1, 1, 1, 1, 0, 1, 1, 1, 1, 1,
+    ];
+
+    const hash2 = [
+      1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 1,
+      0, 0, 1, 1, 0, 0, 0, 1, 1, 0, 1, 1, 1, 0, 0, 1, 1, 1, 1, 1, 1, 1, 0, 1, 1,
+      0, 1, 1, 1, 1, 1, 1, 1, 0, 1, 1, 1, 1, 1,
+    ];
+
+    // Change exactly 4 bits (indices: 10, 25, 38, 53)
+    hash2[10] = 1; // Different from hash1
+    hash2[25] = 1; // Different from hash1
+    hash2[38] = 0; // Different from hash1
+    hash2[53] = 0; // Different from hash1
+
+    const diffIndices = [10, 25, 38, 53];
+
+    const cellSize = 30;
+
+    let animationPhase = 0; // 0 = showing normal, 1 = highlighting diffs
+
+    function drawGrid(ctx, hash, highlightDiffs) {
+      ctx.clearRect(0, 0, 240, 240);
+
+      for (let y = 0; y < 8; y++) {
+        for (let x = 0; x < 8; x++) {
+          const idx = y * 8 + x;
+          const bit = hash[idx];
+
+          // Check if this bit differs
+          const isDiff = diffIndices.includes(idx);
+
+          // Draw background
+          if (highlightDiffs && isDiff) {
+            ctx.fillStyle = "#ff4444";
+          } else {
+            ctx.fillStyle = bit === 1 ? "#ffffff" : "#000000";
+          }
+          ctx.fillRect(x * cellSize, y * cellSize, cellSize, cellSize);
+
+          // Draw border
+          ctx.strokeStyle = getComputedStyle(document.body).getPropertyValue(
+            "--border",
+          );
+          ctx.strokeRect(x * cellSize, y * cellSize, cellSize, cellSize);
+
+          // Draw bit value
+          if (highlightDiffs && isDiff) {
+            ctx.fillStyle = "#ffffff";
+          } else {
+            ctx.fillStyle = bit === 1 ? "#000000" : "#ffffff";
+          }
+          ctx.font = "bold 14px monospace";
+          ctx.textAlign = "center";
+          ctx.textBaseline = "middle";
+          ctx.fillText(
+            bit,
+            x * cellSize + cellSize / 2,
+            y * cellSize + cellSize / 2,
+          );
+        }
+      }
+    }
+
+    function animate() {
+      const highlightDiffs = animationPhase === 1;
+
+      drawGrid(ctx1, hash1, highlightDiffs);
+      drawGrid(ctx2, hash2, highlightDiffs);
+
+      // Toggle phase every 1.5 seconds
+      setTimeout(() => {
+        animationPhase = (animationPhase + 1) % 2;
+        animate();
+      }, 1500);
+    }
+
+    animate();
+  }
+
+  // Start hamming distance animation
+  processHammingDistance();
 </script>
