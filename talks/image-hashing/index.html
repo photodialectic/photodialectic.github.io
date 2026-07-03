@@ -1,0 +1,1116 @@
+---
+layout: slidepost
+title: How Image Hashing Works
+description: A visual guide to perceptual image hashing using the average hash method.
+---
+
+<div class="slide">
+  <div class="slide-text">
+    <h2>What is Image Hashing?</h2>
+    <p>Image hashing (also called perceptual hashing) creates a compact fingerprint of an image based on its visual content.</p>
+    <p>Unlike cryptographic hashes, similar images produce similar hashes, making it perfect for finding duplicates or near-duplicates.</p>
+    <p>We'll focus on <strong>average_hash</strong> - the simplest method to understand.</p>
+  </div>
+  <div class="slide-animation">
+    <style>
+      .intro-demo {
+        display: flex;
+        flex-direction: column;
+        gap: 2rem;
+        align-items: center;
+      }
+      #introCanvas {
+        border: 1px solid var(--border);
+      }
+      .intro-stage {
+        font-size: 0.9rem;
+        color: var(--text-muted);
+        text-align: center;
+      }
+      .intro-hash {
+        font-family: monospace;
+        font-size: 1rem;
+        color: var(--text-heading);
+        padding: 0.75rem 1rem;
+        border: 1px solid var(--border);
+        background: var(--card-bg);
+      }
+    </style>
+    <div class="intro-demo">
+      <canvas id="introCanvas" width="320" height="240"></canvas>
+      <div class="intro-stage" id="introStage">Image</div>
+      <div class="intro-hash" id="introHash">...</div>
+    </div>
+  </div>
+</div>
+
+<div class="slide">
+  <div class="slide-text">
+    <h2>Start with an Image</h2>
+    <p>Any image will work. The algorithm reduces it to its essential visual structure.</p>
+    <p>Let's use this photo and walk through each transformation step by step.</p>
+  </div>
+  <div class="slide-animation">
+    <canvas id="sourceCanvas" style="max-width: 100%; height: auto;"></canvas>
+  </div>
+</div>
+
+<div class="slide">
+  <div class="slide-text">
+    <h2>Convert to Grayscale</h2>
+    <p>First, we reduce complexity by converting to grayscale (luminance).</p>
+    <p>Each pixel changes from three values (R, G, B) to a single brightness value.</p>
+    <p>This removes color information, focusing only on light and dark patterns.</p>
+  </div>
+  <div class="slide-animation">
+    <canvas id="grayscaleCanvas" style="max-width: 100%; height: auto;"></canvas>
+  </div>
+</div>
+
+<div class="slide">
+  <div class="slide-text">
+    <h2>Resize to 8×8</h2>
+    <p>Next, we drastically shrink the image to just 8×8 pixels - only 64 values total.</p>
+    <p>This removes fine details and keeps only the basic structure.</p>
+    <p>Each pixel now represents the average brightness of a larger region.</p>
+  </div>
+  <div class="slide-animation">
+    <style>
+      .resize-container {
+        display: flex;
+        flex-direction: column;
+        gap: 1rem;
+        align-items: center;
+      }
+      #resizeCanvas {
+        image-rendering: pixelated;
+        border: 1px solid var(--border);
+      }
+      #avgDisplay {
+        font-size: 1.1rem;
+        font-weight: bold;
+        color: var(--text-heading);
+        font-family: monospace;
+      }
+    </style>
+    <div class="resize-container">
+      <canvas id="resizeCanvas" width="320" height="320"></canvas>
+      <div id="avgDisplay">Calculating...</div>
+    </div>
+  </div>
+</div>
+
+<div class="slide">
+  <div class="slide-text">
+    <h2>Measure Luminance Values</h2>
+    <p>Each of the 64 pixels has a luminance value from 0 (black) to 255 (white).</p>
+    <p>We record all 64 values and calculate their average.</p>
+    <p>This average will be our threshold for the next step.</p>
+  </div>
+  <div class="slide-animation">
+    <style>
+      .average-container {
+        display: flex;
+        flex-direction: column;
+        gap: 1.5rem;
+        align-items: center;
+      }
+      .luminance-scale {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        font-size: 0.8rem;
+        color: var(--text-muted);
+      }
+      .scale-bar {
+        width: 200px;
+        height: 20px;
+        background: linear-gradient(to right, #000, #fff);
+        border: 1px solid var(--border);
+      }
+      #averageValue {
+        font-size: 1rem;
+        color: var(--text-heading);
+        text-align: center;
+        padding: 0.75rem 1rem;
+        border: 1px solid var(--border);
+        background: var(--card-bg);
+        min-width: 250px;
+      }
+    </style>
+    <div class="average-container">
+      <div class="luminance-scale">
+        <span>0</span>
+        <div class="scale-bar"></div>
+        <span>255</span>
+      </div>
+      <canvas id="averageCanvas" width="320" height="320"></canvas>
+      <div id="averageValue">Calculating...</div>
+    </div>
+  </div>
+</div>
+
+<div class="slide">
+  <div class="slide-text">
+    <h2>Convert to Bits</h2>
+    <p>Now we compare each pixel's luminance to the average:</p>
+    <ul>
+      <li><strong>Above or equal to average?</strong> Set bit to 1</li>
+      <li><strong>Below average?</strong> Set bit to 0</li>
+    </ul>
+    <p>This gives us 64 bits of data - a compact fingerprint of the image!</p>
+  </div>
+  <div class="slide-animation">
+    <style>
+      .bits-conversion-container {
+        display: flex;
+        flex-direction: column;
+        gap: 1.5rem;
+        align-items: center;
+      }
+      #bitsValue {
+        font-size: 1rem;
+        color: var(--text-heading);
+        text-align: center;
+        padding: 0.75rem 1rem;
+        border: 1px solid var(--border);
+        background: var(--card-bg);
+        min-width: 250px;
+      }
+    </style>
+    <div class="bits-conversion-container">
+      <canvas id="bitsCanvas" width="320" height="320"></canvas>
+      <div id="bitsValue">Converting...</div>
+    </div>
+  </div>
+</div>
+
+<div class="slide">
+  <div class="slide-text">
+    <h2>The Final Hash</h2>
+    <p>Those 64 bits can be expressed as a 16-character hexadecimal string.</p>
+    <p>Every 4 bits becomes one hex character (0-9, A-F).</p>
+    <p>This compact representation captures the image's visual essence and can be quickly compared to other hashes.</p>
+  </div>
+  <div class="slide-animation">
+    <style>
+      .hash-display {
+        display: flex;
+        flex-direction: column;
+        gap: 2rem;
+        align-items: center;
+        justify-content: center;
+      }
+      .hash-grid {
+        display: grid;
+        grid-template-columns: repeat(8, 30px);
+        gap: 3px;
+      }
+      .hash-cell {
+        width: 30px;
+        height: 30px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 0.7rem;
+        font-weight: bold;
+        border: 1px solid var(--border);
+        transition: all 0.3s;
+      }
+      .hash-cell.one { background: #ffffff; color: #000000; }
+      .hash-cell.zero { background: #000000; color: #ffffff; }
+      .hash-cell.highlight {
+        border: 3px solid #ff6600;
+        transform: scale(1.1);
+      }
+      .hash-conversion {
+        display: flex;
+        flex-direction: column;
+        gap: 1rem;
+        align-items: center;
+      }
+      .hash-nibble {
+        font-family: monospace;
+        font-size: 1rem;
+        color: var(--text-muted);
+      }
+      .hash-hex {
+        font-family: monospace;
+        font-size: 1.2rem;
+        letter-spacing: 0.1em;
+        color: var(--text-heading);
+        padding: 1rem;
+        border: 1px solid var(--border);
+        min-width: 350px;
+        text-align: center;
+      }
+    </style>
+    <div class="hash-display">
+      <div class="hash-grid" id="finalBitsGrid"></div>
+      <div class="hash-conversion">
+        <div class="hash-nibble" id="currentNibble">Ready...</div>
+        <div class="hash-hex" id="finalHashHex">Computing...</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="slide">
+  <div class="slide-text">
+    <h2>Other Hashing Methods</h2>
+    <p>Average hash is just one approach. There are several other methods, each using a different technique to generate the 64 bits:</p>
+    <ul>
+      <li><strong>pHash (Perceptual Hash):</strong> Uses Discrete Cosine Transform (DCT) to find frequency patterns</li>
+      <li><strong>dHash (Difference Hash):</strong> Compares each pixel to its neighbor (horizontal or vertical)</li>
+      <li><strong>wHash (Wavelet Hash):</strong> Uses wavelet transforms for more robust comparisons</li>
+    </ul>
+    <p>All methods follow the same pattern: <strong>transform → measure → threshold → 64 bits</strong></p>
+  </div>
+  <div class="slide-animation">
+    <style>
+      .methods-flow {
+        display: flex;
+        flex-direction: column;
+        gap: 2rem;
+        align-items: center;
+        justify-content: center;
+        padding: 2rem;
+      }
+      .method-card {
+        width: 100%;
+        max-width: 350px;
+        padding: 1.5rem;
+        border: 1px solid var(--border);
+        background: var(--card-bg);
+      }
+      .method-name {
+        font-size: 1.1rem;
+        font-weight: bold;
+        color: var(--text-heading);
+        margin-bottom: 0.5rem;
+      }
+      .method-steps {
+        font-family: monospace;
+        font-size: 0.85rem;
+        color: var(--text-muted);
+        line-height: 1.8;
+      }
+      .method-arrow {
+        font-size: 1.5rem;
+        color: var(--text-subtle);
+      }
+    </style>
+    <div class="methods-flow">
+      <div class="method-card">
+        <div class="method-name">Average Hash</div>
+        <div class="method-steps">
+          Grayscale → 8×8 → Compare to average
+        </div>
+      </div>
+      <div class="method-arrow">↓</div>
+      <div class="method-card">
+        <div class="method-name">pHash</div>
+        <div class="method-steps">
+          Grayscale → DCT → Low frequencies → Threshold
+        </div>
+      </div>
+      <div class="method-arrow">↓</div>
+      <div class="method-card">
+        <div class="method-name">dHash</div>
+        <div class="method-steps">
+          Grayscale → 9×8 → Compare adjacent pixels
+        </div>
+      </div>
+      <div class="method-arrow">↓</div>
+      <div style="text-align: center; font-family: monospace; font-size: 1rem; color: var(--text-heading);">
+        All produce → <strong>64 bits</strong>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="slide">
+  <div class="slide-text">
+    <h2>Hamming Distance</h2>
+    <p>To compare two images, we calculate the <strong>Hamming distance</strong> between their hashes.</p>
+    <p>Hamming distance counts how many bits differ between two binary numbers.</p>
+    <p>Lower distance = more similar images. A distance of 0 means identical (or nearly identical) images.</p>
+  </div>
+  <div class="slide-animation">
+    <style>
+      .hamming-demo {
+        display: flex;
+        flex-direction: column;
+        gap: 1.5rem;
+        align-items: center;
+        justify-content: center;
+      }
+      .hamming-compare {
+        display: flex;
+        gap: 0.5rem;
+        font-family: monospace;
+        font-size: 0.8rem;
+      }
+      .hamming-bit {
+        width: 20px;
+        height: 30px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border: 1px solid var(--border);
+      }
+      .hamming-bit.diff {
+        background: #ff4444;
+        color: white;
+      }
+      .hamming-result {
+        font-size: 1.1rem;
+        color: var(--text-muted);
+      }
+    </style>
+    <div class="hamming-demo">
+      <div>
+        <div class="hamming-compare" id="hash1">
+          <div class="hamming-bit">0</div><div class="hamming-bit">1</div><div class="hamming-bit diff">0</div><div class="hamming-bit">0</div><div class="hamming-bit">1</div><div class="hamming-bit diff">0</div><div class="hamming-bit">0</div>
+        </div>
+        <div class="hamming-compare" id="hash2" style="margin-top: 0.5rem;">
+          <div class="hamming-bit">0</div><div class="hamming-bit">1</div><div class="hamming-bit diff">1</div><div class="hamming-bit">0</div><div class="hamming-bit">1</div><div class="hamming-bit diff">1</div><div class="hamming-bit">0</div>
+        </div>
+      </div>
+      <div class="hamming-result">Hamming Distance: <strong>2</strong></div>
+      <p style="font-size: 0.85rem; color: var(--text-subtle); text-align: center; max-width: 300px;">
+        Only 2 bits differ, indicating these images are very similar
+      </p>
+    </div>
+  </div>
+</div>
+
+<div class="slide">
+  <div class="slide-text">
+    <h2>Storing & Querying Hashes</h2>
+    <p>Since our hashes are 64-bit numbers, we can store them efficiently and perform fast similarity searches.</p>
+    <p>To find similar images:</p>
+    <ul>
+      <li>Store hashes as <strong>BIGINT</strong> values in a database</li>
+      <li>Use bitwise XOR to calculate Hamming distance</li>
+      <li>Count the number of 1s in the result (popcount)</li>
+    </ul>
+    <p>This allows queries like: "Find all images with Hamming distance ≤ 5 from this image"</p>
+  </div>
+  <div class="slide-animation">
+    <style>
+      .query-demo {
+        display: flex;
+        flex-direction: column;
+        gap: 2rem;
+        align-items: center;
+        justify-content: center;
+        padding: 2rem;
+      }
+      .query-example {
+        width: 100%;
+        max-width: 550px;
+        font-family: monospace;
+        font-size: 0.9rem;
+        background: var(--card-bg);
+        border: 1px solid var(--border);
+        padding: 1.5rem;
+        line-height: 1.6;
+      }
+      .query-line {
+        margin-bottom: 0.3rem;
+        color: var(--text-muted);
+      }
+      .query-indent {
+        padding-left: 2rem;
+      }
+      .query-indent-2 {
+        padding-left: 4rem;
+      }
+      .query-keyword {
+        color: #4444ff;
+        font-weight: bold;
+      }
+      .query-function {
+        color: #ff6600;
+      }
+      .query-explanation {
+        font-size: 0.9rem;
+        color: var(--text-muted);
+        text-align: center;
+        max-width: 350px;
+        line-height: 1.6;
+      }
+      .bit-operation {
+        display: flex;
+        flex-direction: column;
+        gap: 0.5rem;
+        font-family: monospace;
+        font-size: 0.9rem;
+        padding: 1rem;
+        background: var(--card-bg);
+        border: 1px solid var(--border);
+      }
+      .bit-row {
+        display: flex;
+        gap: 0.5rem;
+        align-items: center;
+      }
+      .bit-label {
+        width: 100px;
+        color: var(--text-muted);
+      }
+      .bit-value {
+        color: var(--text-heading);
+      }
+    </style>
+    <div class="query-demo">
+      <div class="query-example">
+        <div class="query-line"><span class="query-keyword">SELECT</span></div>
+        <div class="query-line query-indent">image_id,</div>
+        <div class="query-line query-indent">hash,</div>
+        <div class="query-line query-indent"><span class="query-function">BIT_COUNT</span>(hash <span class="query-keyword">XOR</span> 0x8000001898dcfedf)</div>
+        <div class="query-line query-indent-2"><span class="query-keyword">AS</span> distance</div>
+        <div class="query-line"><span class="query-keyword">FROM</span></div>
+        <div class="query-line query-indent">images</div>
+        <div class="query-line"><span class="query-keyword">WHERE</span></div>
+        <div class="query-line query-indent"><span class="query-function">BIT_COUNT</span>(hash <span class="query-keyword">XOR</span> 0x8000001898dcfedf) &lt;= 5</div>
+        <div class="query-line"><span class="query-keyword">ORDER BY</span></div>
+        <div class="query-line query-indent">distance;</div>
+      </div>
+      
+      <div class="bit-operation">
+        <div class="bit-row">
+          <span class="bit-label">Target:</span>
+          <span class="bit-value">0x8000001898dcfedf</span>
+        </div>
+        <div class="bit-row">
+          <span class="bit-label">Image 1:</span>
+          <span class="bit-value">0x8000001898dcfedb</span>
+        </div>
+        <div class="bit-row">
+          <span class="bit-label">XOR result:</span>
+          <span class="bit-value">0x0000000000000004</span>
+        </div>
+        <div class="bit-row">
+          <span class="bit-label">Distance:</span>
+          <span class="bit-value">1 bit differs ✓</span>
+        </div>
+      </div>
+      
+      <div class="query-explanation">
+        Modern databases can index and query these efficiently, making it possible to search millions of images in milliseconds.
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+// Intro animation - demonstrate the concept
+function animateIntro() {
+  const canvas = document.getElementById('introCanvas');
+  if (!canvas) return;
+  
+  const ctx = canvas.getContext('2d');
+  const stageDiv = document.getElementById('introStage');
+  const hashDiv = document.getElementById('introHash');
+  
+  let stage = 0;
+  let progress = 0;
+  
+  // Create a simple test pattern
+  const pattern = [
+    [180, 170, 160, 150, 140, 130, 120, 110],
+    [190, 180, 170, 160, 150, 140, 130, 120],
+    [200, 190, 180, 170, 160, 150, 140, 130],
+    [210, 200, 190, 180, 170, 160, 150, 140],
+    [220, 210, 200, 190, 180, 170, 160, 150],
+    [230, 220, 210, 200, 190, 180, 170, 160],
+    [240, 230, 220, 210, 200, 190, 180, 170],
+    [250, 240, 230, 220, 210, 200, 190, 180]
+  ];
+  
+  function animate() {
+    ctx.clearRect(0, 0, 320, 240);
+    
+    progress += 0.01;
+    
+    if (progress >= 1) {
+      progress = 0;
+      stage = (stage + 1) % 4;
+    }
+    
+    const offsetY = 30;
+    
+    if (stage === 0) {
+      // Stage 0: Show "image" (smooth gradient)
+      const size = 160;
+      const offset = (320 - size) / 2;
+      
+      for (let y = 0; y < size; y++) {
+        for (let x = 0; x < size; x++) {
+          const py = Math.floor((y / size) * 8);
+          const px = Math.floor((x / size) * 8);
+          const value = pattern[py][px];
+          ctx.fillStyle = `rgb(${value}, ${value}, ${value})`;
+          ctx.fillRect(offset + x, offsetY + y, 1, 1);
+        }
+      }
+      
+      if (stageDiv) stageDiv.textContent = 'Image';
+      if (hashDiv) hashDiv.textContent = '...';
+      
+    } else if (stage === 1) {
+      // Stage 1: Pixelate to 8x8
+      const cellSize = 20;
+      const gridOffset = (320 - cellSize * 8) / 2;
+      
+      for (let y = 0; y < 8; y++) {
+        for (let x = 0; x < 8; x++) {
+          const value = pattern[y][x];
+          ctx.fillStyle = `rgb(${value}, ${value}, ${value})`;
+          ctx.fillRect(gridOffset + x * cellSize, offsetY + y * cellSize, cellSize, cellSize);
+          
+          ctx.strokeStyle = getComputedStyle(document.body).getPropertyValue('--border');
+          ctx.strokeRect(gridOffset + x * cellSize, offsetY + y * cellSize, cellSize, cellSize);
+        }
+      }
+      
+      if (stageDiv) stageDiv.textContent = 'Resize to 8×8';
+      if (hashDiv) hashDiv.textContent = '...';
+      
+    } else if (stage === 2) {
+      // Stage 2: Convert to bits
+      const cellSize = 20;
+      const gridOffset = (320 - cellSize * 8) / 2;
+      const avg = pattern.flat().reduce((a, b) => a + b) / 64;
+      
+      for (let y = 0; y < 8; y++) {
+        for (let x = 0; x < 8; x++) {
+          const value = pattern[y][x];
+          const bit = value >= avg ? 1 : 0;
+          
+          ctx.fillStyle = bit === 1 ? '#ffffff' : '#000000';
+          ctx.fillRect(gridOffset + x * cellSize, offsetY + y * cellSize, cellSize, cellSize);
+          
+          ctx.strokeStyle = getComputedStyle(document.body).getPropertyValue('--border');
+          ctx.strokeRect(gridOffset + x * cellSize, offsetY + y * cellSize, cellSize, cellSize);
+          
+          ctx.fillStyle = bit === 1 ? '#000000' : '#ffffff';
+          ctx.font = 'bold 14px monospace';
+          ctx.textAlign = 'center';
+          ctx.textBaseline = 'middle';
+          ctx.fillText(bit, gridOffset + x * cellSize + cellSize / 2, offsetY + y * cellSize + cellSize / 2);
+        }
+      }
+      
+      if (stageDiv) stageDiv.textContent = 'Convert to bits';
+      if (hashDiv) hashDiv.textContent = '...';
+      
+    } else {
+      // Stage 3: Show hash
+      const cellSize = 20;
+      const gridOffset = (320 - cellSize * 8) / 2;
+      const avg = pattern.flat().reduce((a, b) => a + b) / 64;
+      
+      for (let y = 0; y < 8; y++) {
+        for (let x = 0; x < 8; x++) {
+          const value = pattern[y][x];
+          const bit = value >= avg ? 1 : 0;
+          
+          ctx.fillStyle = bit === 1 ? '#ffffff' : '#000000';
+          ctx.fillRect(gridOffset + x * cellSize, offsetY + y * cellSize, cellSize, cellSize);
+          
+          ctx.strokeStyle = getComputedStyle(document.body).getPropertyValue('--border');
+          ctx.strokeRect(gridOffset + x * cellSize, offsetY + y * cellSize, cellSize, cellSize);
+        }
+      }
+      
+      // Calculate hash
+      let hash = '';
+      for (let i = 0; i < 64; i += 4) {
+        const bits = [];
+        for (let j = 0; j < 4; j++) {
+          const y = Math.floor((i + j) / 8);
+          const x = (i + j) % 8;
+          const value = pattern[y][x];
+          bits.push(value >= avg ? 1 : 0);
+        }
+        const nibble = bits[0] * 8 + bits[1] * 4 + bits[2] * 2 + bits[3];
+        hash += nibble.toString(16);
+      }
+      
+      if (stageDiv) stageDiv.textContent = 'Final hash';
+      if (hashDiv) hashDiv.textContent = hash;
+    }
+    
+    requestAnimationFrame(animate);
+  }
+  
+  animate();
+}
+
+// Start intro animation
+animateIntro();
+
+// Image processing implementation
+const imageUrl = 'mpls.jpg';
+let sourceImage = null;
+let pixelData = [];
+let hashBits = [];
+
+// Load the image
+const img = new Image();
+img.onload = function() {
+  sourceImage = img;
+  processSource();
+  processGrayscale();
+  processResize();
+  processAverage();
+  processBits();
+  processFinal();
+};
+img.onerror = function() {
+  console.error('Failed to load image, using fallback');
+  // Continue with a simple pattern
+};
+img.src = imageUrl;
+
+function processSource() {
+  const canvas = document.getElementById('sourceCanvas');
+  if (!canvas) return;
+  
+  const ctx = canvas.getContext('2d');
+  const maxSize = 300;
+  const scale = Math.min(maxSize / sourceImage.width, maxSize / sourceImage.height);
+  
+  canvas.width = sourceImage.width * scale;
+  canvas.height = sourceImage.height * scale;
+  
+  ctx.drawImage(sourceImage, 0, 0, canvas.width, canvas.height);
+}
+
+function processGrayscale() {
+  const canvas = document.getElementById('grayscaleCanvas');
+  if (!canvas || !sourceImage) return;
+  
+  const ctx = canvas.getContext('2d');
+  const maxSize = 300;
+  const scale = Math.min(maxSize / sourceImage.width, maxSize / sourceImage.height);
+  
+  canvas.width = sourceImage.width * scale;
+  canvas.height = sourceImage.height * scale;
+  
+  ctx.drawImage(sourceImage, 0, 0, canvas.width, canvas.height);
+  
+  const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+  const data = imageData.data;
+  
+  // Animate grayscale conversion
+  let progress = 0;
+  const animate = () => {
+    progress += 0.003;
+    if (progress > 1) progress = 1;
+    
+    for (let i = 0; i < data.length; i += 4) {
+      const r = data[i];
+      const g = data[i + 1];
+      const b = data[i + 2];
+      const gray = r * 0.299 + g * 0.587 + b * 0.114;
+      
+      data[i] = r + (gray - r) * progress;
+      data[i + 1] = g + (gray - g) * progress;
+      data[i + 2] = b + (gray - b) * progress;
+    }
+    
+    ctx.putImageData(imageData, 0, 0);
+    
+    if (progress < 1) {
+      requestAnimationFrame(animate);
+    }
+  };
+  
+  setTimeout(animate, 500);
+}
+
+function processResize() {
+  const canvas = document.getElementById('resizeCanvas');
+  if (!canvas || !sourceImage) return;
+  
+  const ctx = canvas.getContext('2d');
+  const tempCanvas = document.createElement('canvas');
+  const tempCtx = tempCanvas.getContext('2d');
+  
+  // Draw grayscale version to temp canvas
+  tempCanvas.width = sourceImage.width;
+  tempCanvas.height = sourceImage.height;
+  tempCtx.drawImage(sourceImage, 0, 0);
+  
+  const imageData = tempCtx.getImageData(0, 0, tempCanvas.width, tempCanvas.height);
+  const data = imageData.data;
+  
+  for (let i = 0; i < data.length; i += 4) {
+    const gray = data[i] * 0.299 + data[i + 1] * 0.587 + data[i + 2] * 0.114;
+    data[i] = data[i + 1] = data[i + 2] = gray;
+  }
+  tempCtx.putImageData(imageData, 0, 0);
+  
+  // Resize to 8x8 in temp canvas
+  const smallCanvas = document.createElement('canvas');
+  const smallCtx = smallCanvas.getContext('2d');
+  smallCanvas.width = 8;
+  smallCanvas.height = 8;
+  smallCtx.drawImage(tempCanvas, 0, 0, 8, 8);
+  
+  // Get pixel values for later use
+  const resizedData = smallCtx.getImageData(0, 0, 8, 8);
+  pixelData = [];
+  
+  for (let i = 0; i < resizedData.data.length; i += 4) {
+    pixelData.push(Math.round(resizedData.data[i]));
+  }
+  
+  // Animation setup
+  canvas.width = 320;
+  canvas.height = 320;
+  
+  // Calculate original aspect ratio dimensions
+  const maxSize = 280;
+  const aspectRatio = sourceImage.width / sourceImage.height;
+  let origWidth, origHeight;
+  
+  if (aspectRatio > 1) {
+    // Wider than tall
+    origWidth = maxSize;
+    origHeight = maxSize / aspectRatio;
+  } else {
+    // Taller than wide
+    origHeight = maxSize;
+    origWidth = maxSize * aspectRatio;
+  }
+  
+  const origOffsetX = (320 - origWidth) / 2;
+  const origOffsetY = (320 - origHeight) / 2;
+  
+  // Square dimensions for 8x8
+  const squareSize = 280;
+  const squareOffsetX = (320 - squareSize) / 2;
+  const squareOffsetY = (320 - squareSize) / 2;
+  
+  // Pixelated 8x8 dimensions
+  const cellSize = 40;
+  
+  // Three stage animation: original aspect -> square -> pixelated
+  let progress = 0;
+  
+  const animate = () => {
+    progress += 0.005;
+    if (progress > 1) progress = 1;
+    
+    ctx.clearRect(0, 0, 320, 320);
+    
+    if (progress < 0.33) {
+      // Stage 1: Original aspect ratio -> Square (smooth)
+      const stageProgress = progress / 0.33;
+      const currentWidth = origWidth + (squareSize - origWidth) * stageProgress;
+      const currentHeight = origHeight + (squareSize - origHeight) * stageProgress;
+      const currentX = origOffsetX + (squareOffsetX - origOffsetX) * stageProgress;
+      const currentY = origOffsetY + (squareOffsetY - origOffsetY) * stageProgress;
+      
+      ctx.drawImage(tempCanvas, currentX, currentY, currentWidth, currentHeight);
+      
+      const avgDisplay = document.getElementById('avgDisplay');
+      if (avgDisplay) {
+        avgDisplay.textContent = 'Resizing to square...';
+      }
+      
+    } else if (progress < 0.66) {
+      // Stage 2: Hold square (smooth)
+      ctx.drawImage(tempCanvas, squareOffsetX, squareOffsetY, squareSize, squareSize);
+      
+      const avgDisplay = document.getElementById('avgDisplay');
+      if (avgDisplay) {
+        avgDisplay.textContent = 'Square format';
+      }
+      
+    } else {
+      // Stage 3: Square (smooth) -> Pixelated 8x8
+      const stageProgress = (progress - 0.66) / 0.34;
+      
+      // Blend between smooth and pixelated
+      ctx.globalAlpha = 1 - stageProgress;
+      ctx.drawImage(tempCanvas, squareOffsetX, squareOffsetY, squareSize, squareSize);
+      ctx.globalAlpha = stageProgress;
+      
+      // Draw 8x8 grid
+      for (let row = 0; row < 8; row++) {
+        for (let col = 0; col < 8; col++) {
+          const idx = row * 8 + col;
+          const value = pixelData[idx];
+          
+          ctx.fillStyle = `rgb(${value}, ${value}, ${value})`;
+          ctx.fillRect(col * cellSize, row * cellSize, cellSize, cellSize);
+          
+          ctx.strokeStyle = getComputedStyle(document.body).getPropertyValue('--border');
+          ctx.strokeRect(col * cellSize, row * cellSize, cellSize, cellSize);
+        }
+      }
+      
+      ctx.globalAlpha = 1;
+      
+      const avgDisplay = document.getElementById('avgDisplay');
+      if (avgDisplay) {
+        avgDisplay.textContent = '8×8 pixels - 64 values';
+      }
+    }
+    
+    if (progress < 1) {
+      requestAnimationFrame(animate);
+    } else {
+      // Loop the animation
+      setTimeout(() => {
+        progress = 0;
+        animate();
+      }, 2000);
+    }
+  };
+  
+  setTimeout(animate, 1500);
+}
+
+function processAverage() {
+  const canvas = document.getElementById('averageCanvas');
+  if (!canvas || pixelData.length === 0) return;
+  
+  const average = pixelData.reduce((a, b) => a + b, 0) / pixelData.length;
+  
+  const ctx = canvas.getContext('2d');
+  canvas.width = 320;
+  canvas.height = 320;
+  
+  const cellSize = 40;
+  
+  // Animate adding numbers cell by cell
+  let currentCell = 0;
+  let runningSum = 0;
+  
+  const animateNumbers = () => {
+    // Clear and redraw
+    ctx.clearRect(0, 0, 320, 320);
+    
+    // Draw all cells with grayscale background
+    for (let y = 0; y < 8; y++) {
+      for (let x = 0; x < 8; x++) {
+        const idx = y * 8 + x;
+        const value = pixelData[idx];
+        
+        // Draw grayscale cell
+        ctx.fillStyle = `rgb(${value}, ${value}, ${value})`;
+        ctx.fillRect(x * cellSize, y * cellSize, cellSize, cellSize);
+        
+        // Draw border
+        ctx.strokeStyle = getComputedStyle(document.body).getPropertyValue('--border');
+        ctx.strokeRect(x * cellSize, y * cellSize, cellSize, cellSize);
+        
+        // Only draw numbers for processed cells
+        if (idx <= currentCell && currentCell < 64) {
+          const textColor = value > 127 ? '#000' : '#fff';
+          ctx.fillStyle = textColor;
+          ctx.font = 'bold 12px monospace';
+          ctx.textAlign = 'center';
+          ctx.textBaseline = 'middle';
+          ctx.fillText(value, x * cellSize + cellSize / 2, y * cellSize + cellSize / 2);
+          
+          if (idx === currentCell) {
+            runningSum += value;
+          }
+        }
+      }
+    }
+    
+    // Update average display
+    const avgDiv = document.getElementById('averageValue');
+    if (avgDiv) {
+      if (currentCell < 64) {
+        const currentAvg = currentCell >= 0 ? Math.round(runningSum / (currentCell + 1)) : 0;
+        avgDiv.textContent = `Cell ${currentCell + 1}/64 - Running Average: ${currentAvg}`;
+      } else {
+        avgDiv.textContent = `Average pixel value: ${Math.round(average)}`;
+      }
+    }
+    
+    currentCell++;
+    
+    if (currentCell <= 64) {
+      setTimeout(animateNumbers, 100);
+    } else {
+      // Restart animation
+      setTimeout(() => {
+        currentCell = 0;
+        runningSum = 0;
+        animateNumbers();
+      }, 2000);
+    }
+  };
+  
+  setTimeout(animateNumbers, 500);
+}
+
+function processBits() {
+  const canvas = document.getElementById('bitsCanvas');
+  if (!canvas || pixelData.length === 0) return;
+  
+  const average = pixelData.reduce((a, b) => a + b, 0) / pixelData.length;
+  hashBits = pixelData.map(v => v >= average ? 1 : 0);
+  
+  const ctx = canvas.getContext('2d');
+  canvas.width = 320;
+  canvas.height = 320;
+  
+  const cellSize = 40;
+  
+  // Animate converting numbers to bits cell by cell
+  let currentCell = 0;
+  
+  const animateBits = () => {
+    // Clear and redraw
+    ctx.clearRect(0, 0, 320, 320);
+    
+    // Draw all cells
+    for (let y = 0; y < 8; y++) {
+      for (let x = 0; x < 8; x++) {
+        const idx = y * 8 + x;
+        const value = pixelData[idx];
+        const bit = hashBits[idx];
+        
+        if (idx <= currentCell) {
+          // Show as bit (black and white)
+          ctx.fillStyle = bit === 1 ? '#ffffff' : '#000000';
+          ctx.fillRect(x * cellSize, y * cellSize, cellSize, cellSize);
+          
+          ctx.strokeStyle = getComputedStyle(document.body).getPropertyValue('--border');
+          ctx.strokeRect(x * cellSize, y * cellSize, cellSize, cellSize);
+          
+          // Draw bit value (inverted text color)
+          ctx.fillStyle = bit === 1 ? '#000000' : '#ffffff';
+          ctx.font = 'bold 20px monospace';
+          ctx.textAlign = 'center';
+          ctx.textBaseline = 'middle';
+          ctx.fillText(bit, x * cellSize + cellSize / 2, y * cellSize + cellSize / 2);
+        } else {
+          // Still showing luminance value
+          ctx.fillStyle = `rgb(${value}, ${value}, ${value})`;
+          ctx.fillRect(x * cellSize, y * cellSize, cellSize, cellSize);
+          
+          ctx.strokeStyle = getComputedStyle(document.body).getPropertyValue('--border');
+          ctx.strokeRect(x * cellSize, y * cellSize, cellSize, cellSize);
+          
+          // Draw number
+          const textColor = value > 127 ? '#000' : '#fff';
+          ctx.fillStyle = textColor;
+          ctx.font = 'bold 12px monospace';
+          ctx.textAlign = 'center';
+          ctx.textBaseline = 'middle';
+          ctx.fillText(value, x * cellSize + cellSize / 2, y * cellSize + cellSize / 2);
+        }
+      }
+    }
+    
+    // Update display
+    const bitsDiv = document.getElementById('bitsValue');
+    if (bitsDiv) {
+      if (currentCell < 64) {
+        bitsDiv.textContent = `Converting cell ${currentCell + 1}/64 (threshold: ${Math.round(average)})`;
+      } else {
+        bitsDiv.textContent = `Complete! 64 bits generated`;
+      }
+    }
+    
+    currentCell++;
+    
+    if (currentCell <= 64) {
+      setTimeout(animateBits, 100);
+    } else {
+      // Restart animation
+      setTimeout(() => {
+        currentCell = 0;
+        animateBits();
+      }, 2000);
+    }
+  };
+  
+  setTimeout(animateBits, 500);
+}
+
+function processFinal() {
+  if (hashBits.length === 0) return;
+  
+  // Create the bits grid
+  const grid = document.getElementById('finalBitsGrid');
+  if (!grid) return;
+  
+  grid.innerHTML = '';
+  const cells = [];
+  hashBits.forEach(bit => {
+    const cell = document.createElement('div');
+    cell.className = `hash-cell ${bit === 1 ? 'one' : 'zero'}`;
+    cell.textContent = bit;
+    grid.appendChild(cell);
+    cells.push(cell);
+  });
+  
+  // Animate conversion to hex, 4 bits at a time
+  let currentNibbleIndex = 0;
+  let builtHex = '';
+  
+  const animateNibble = () => {
+    if (currentNibbleIndex >= 16) {
+      // Animation complete, restart after pause
+      setTimeout(() => {
+        currentNibbleIndex = 0;
+        builtHex = '';
+        // Clear all highlights
+        cells.forEach(cell => cell.classList.remove('highlight'));
+        animateNibble();
+      }, 2000);
+      return;
+    }
+    
+    // Clear previous highlights
+    cells.forEach(cell => cell.classList.remove('highlight'));
+    
+    // Highlight current 4 bits
+    const startBit = currentNibbleIndex * 4;
+    for (let i = 0; i < 4; i++) {
+      cells[startBit + i].classList.add('highlight');
+    }
+    
+    // Calculate nibble value
+    const bit0 = hashBits[startBit];
+    const bit1 = hashBits[startBit + 1];
+    const bit2 = hashBits[startBit + 2];
+    const bit3 = hashBits[startBit + 3];
+    const nibbleValue = bit0 * 8 + bit1 * 4 + bit2 * 2 + bit3;
+    const hexChar = nibbleValue.toString(16);
+    
+    // Show conversion
+    const nibbleDiv = document.getElementById('currentNibble');
+    if (nibbleDiv) {
+      nibbleDiv.textContent = `${bit0}${bit1}${bit2}${bit3} = ${bit0}×8 + ${bit1}×4 + ${bit2}×2 + ${bit3}×1 = ${nibbleValue} = ${hexChar.toUpperCase()}`;
+    }
+    
+    // Add to built hex string
+    builtHex += hexChar;
+    
+    const hexDiv = document.getElementById('finalHashHex');
+    if (hexDiv) {
+      hexDiv.textContent = builtHex + '_'.repeat(16 - builtHex.length);
+    }
+    
+    currentNibbleIndex++;
+    setTimeout(animateNibble, 800);
+  };
+  
+  setTimeout(animateNibble, 500);
+}
+</script>
