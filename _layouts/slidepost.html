@@ -471,8 +471,15 @@
           });
         },
         {
-          threshold: 0.6,
-          rootMargin: "-10% 0px -10% 0px",
+          // Fire when a slide crosses a thin band at the vertical center of
+          // the viewport, rather than requiring a fixed percentage of the
+          // slide's own height to be visible. The old threshold-based
+          // approach broke for slides taller than ~80% of the viewport
+          // (e.g. "Other Hashing Methods" and "Storing & Querying Hashes"
+          // on narrow phones), since no scroll position could ever satisfy
+          // it and the slide stayed stuck at opacity: 0.
+          threshold: 0,
+          rootMargin: "-45% 0px -45% 0px",
         },
       );
 
