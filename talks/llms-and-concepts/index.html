@@ -1,0 +1,1867 @@
+---
+layout: slidepost
+title: LLMs and Concepts of Applied AI
+description: A visual mental model for inference, harnesses, and the shared concepts that connect them.
+---
+
+<style>
+  /* ---------- Shared chat window component (reused across several slides) ---------- */
+  .chatwin {
+    width: 100%;
+    max-width: 420px;
+    border: 1px solid var(--border);
+    background: var(--card-bg);
+    border-radius: 10px;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+  }
+  .chatwin-header {
+    display: flex;
+    gap: 6px;
+    padding: 0.6rem 0.75rem;
+    border-bottom: 1px solid var(--border-subtle);
+  }
+  .chatwin-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--border);
+  }
+  .chatwin-body {
+    padding: 1rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    min-height: 220px;
+    font-size: 0.88rem;
+  }
+  .chatwin-body.autoscroll {
+    max-height: 320px;
+    overflow-y: auto;
+    scroll-behavior: smooth;
+  }
+  .chatwin-input-row {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.6rem 0.75rem;
+    border-top: 1px solid var(--border-subtle);
+  }
+  .chatwin-input {
+    flex: 1;
+    min-height: 1.5em;
+    font-size: 0.85rem;
+    color: var(--text);
+    padding: 0.4rem 0.75rem;
+    border: 1px solid var(--border);
+    border-radius: 999px;
+    background: var(--bg);
+    white-space: pre-wrap;
+    word-break: break-word;
+  }
+  .chatwin-input:empty::before {
+    content: "Type a message…";
+    color: var(--text-subtle);
+  }
+  .chatwin-send {
+    flex-shrink: 0;
+    border: none;
+    background: var(--border-subtle);
+    color: var(--text-muted);
+    width: 2rem;
+    height: 2rem;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.85rem;
+    cursor: default;
+    transition:
+      background 0.2s,
+      color 0.2s,
+      transform 0.15s;
+  }
+  .chatwin-send.active {
+    background: #4444ff;
+    color: #fff;
+    transform: scale(1.12);
+  }
+  .msg {
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+  }
+  .msg-user {
+    align-items: flex-end;
+  }
+  .msg-assistant,
+  .msg-tool {
+    align-items: flex-start;
+  }
+  .msg-bubble {
+    padding: 0.5rem 0.75rem;
+    border-radius: 12px;
+    max-width: 88%;
+    white-space: pre-wrap;
+    line-height: 1.45;
+  }
+  .msg-user .msg-bubble {
+    background: var(--text-heading);
+    color: var(--bg);
+    border-bottom-right-radius: 2px;
+  }
+  .msg-assistant .msg-bubble {
+    background: var(--border-subtle);
+    color: var(--text);
+    border-bottom-left-radius: 2px;
+  }
+  .msg-bubble.streaming::after,
+  .chatwin-input.streaming::after {
+    content: "▋";
+    opacity: 0.6;
+    margin-left: 1px;
+  }
+  .tool-card {
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    background: var(--bg);
+    font-family: monospace;
+    font-size: 0.76rem;
+    width: 100%;
+    max-width: 88%;
+    overflow: hidden;
+    transition:
+      opacity 0.4s ease-out,
+      transform 0.4s ease-out;
+  }
+  .tool-card-head {
+    padding: 0.35rem 0.6rem;
+    background: var(--border-subtle);
+    display: flex;
+    gap: 0.5rem;
+    align-items: center;
+  }
+  .tool-actor {
+    font-size: 0.6rem;
+    font-weight: bold;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+    padding: 0.12rem 0.4rem;
+    border-radius: 4px;
+    color: #fff;
+    white-space: nowrap;
+  }
+  .tool-call .tool-actor {
+    background: #ff8800;
+  }
+  .tool-result .tool-actor {
+    background: #22aa66;
+  }
+  .tool-action {
+    color: var(--text-muted);
+    font-size: 0.74rem;
+  }
+  .tool-card-body {
+    padding: 0.5rem 0.6rem;
+    white-space: pre-wrap;
+    color: var(--text-muted);
+  }
+
+  /* ---------- Shared code/payload box component ---------- */
+  .code-label {
+    font-size: 0.7rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--text-subtle);
+    margin-bottom: 0.3rem;
+  }
+  .code-box {
+    font-family: monospace;
+    font-size: 0.78rem;
+    border: 1px solid var(--border);
+    background: var(--bg);
+    border-radius: 8px;
+    padding: 0.75rem;
+    white-space: pre-wrap;
+    min-height: 3em;
+    color: var(--text);
+  }
+  .payload-demo {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    width: 100%;
+    max-width: 420px;
+  }
+  .payload-box {
+    opacity: 0;
+    transition: opacity 0.5s;
+  }
+  .payload-box.show {
+    opacity: 1;
+  }
+  .stack-col {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+    align-items: center;
+    width: 100%;
+  }
+
+  /* ---------- Shared concept card component ---------- */
+  .concept-cards {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    width: 100%;
+    max-width: 380px;
+  }
+  @media (min-width: 600px) {
+    .concept-cards {
+      flex-direction: row;
+    }
+  }
+  .concept-card {
+    flex: 1;
+    border: 1px solid var(--border);
+    background: var(--card-bg);
+    border-radius: 8px;
+    padding: 1rem;
+  }
+  .concept-card-title {
+    font-weight: bold;
+    color: var(--text-heading);
+    margin-bottom: 0.4rem;
+    font-size: 0.95rem;
+  }
+  .concept-card-body {
+    font-size: 0.8rem;
+    color: var(--text-muted);
+    line-height: 1.5;
+  }
+
+  @media (max-width: 767px) {
+    .chatwin {
+      max-width: 100%;
+    }
+    .chatwin-body {
+      font-size: 0.82rem;
+      min-height: 180px;
+    }
+  }
+</style>
+
+<div class="slide">
+  <div class="slide-text">
+    <h2>Core Building Blocks</h2>
+    <p>
+      <strong>Inference</strong> is the compute layer of AI text generation.
+      It's what's operating the model. Some inference providers own their
+      models (OpenAI, Anthropic, Google) and some host licensed models from
+      other labs (Bedrock, Vertex AI, DigitalOcean).
+    </p>
+    <p>
+      <strong>Harness</strong> is the application layer leveraging inference —
+      it manages conversation state and actually executes anything the model
+      asks for.
+    </p>
+    <p>
+      Between these blocks sit <strong>shared conventions</strong> — Agents,
+      Tools/Functions, MCPs — that neither block strictly requires, but that
+      most harnesses and inference APIs have converged on to talk to each
+      other.
+    </p>
+  </div>
+  <div class="slide-animation">
+    <style>
+      .blocks-demo {
+        display: flex;
+        flex-direction: column;
+        gap: 1.25rem;
+        align-items: center;
+        padding: 1.5rem 1rem;
+        width: 100%;
+      }
+      @media (min-width: 600px) {
+        .blocks-demo {
+          flex-direction: row;
+          align-items: stretch;
+          justify-content: center;
+        }
+      }
+      .block {
+        border: 2px solid currentColor;
+        border-radius: 10px;
+        padding: 1rem;
+        display: flex;
+        flex-direction: column;
+        gap: 0.5rem;
+        align-items: center;
+        min-width: 160px;
+      }
+      .block-inference {
+        color: #4444ff;
+      }
+      .block-harness {
+        color: #ff8800;
+      }
+      .block-title {
+        font-weight: bold;
+        font-size: 0.95rem;
+        color: var(--text-heading);
+        margin-bottom: 0.25rem;
+      }
+      .block-chip {
+        font-size: 0.72rem;
+        color: var(--text-muted);
+        border: 1px solid var(--border);
+        border-radius: 999px;
+        padding: 0.2rem 0.6rem;
+        opacity: 0;
+        transform: translateY(8px);
+        animation: chipIn 6s ease-in-out infinite;
+      }
+      .block-shared {
+        display: flex;
+        flex-direction: row;
+        flex-wrap: wrap;
+        gap: 0.5rem;
+        align-items: center;
+        justify-content: center;
+        max-width: 160px;
+      }
+      @media (min-width: 600px) {
+        .block-shared {
+          flex-direction: column;
+        }
+      }
+      .shared-label {
+        font-size: 0.7rem;
+        text-transform: uppercase;
+        letter-spacing: 0.06em;
+        color: var(--text-subtle);
+        margin-bottom: 0.25rem;
+        text-align: center;
+      }
+      .shared-chip {
+        font-size: 0.72rem;
+        font-weight: 600;
+        color: #22aa66;
+        border: 1px solid #22aa66;
+        border-radius: 999px;
+        padding: 0.25rem 0.65rem;
+        opacity: 0;
+        transform: translateY(8px);
+        animation: chipIn 6s ease-in-out infinite;
+      }
+      @keyframes chipIn {
+        0%,
+        6% {
+          opacity: 0;
+          transform: translateY(8px);
+        }
+        18%,
+        92% {
+          opacity: 1;
+          transform: translateY(0);
+        }
+        100% {
+          opacity: 0;
+          transform: translateY(8px);
+        }
+      }
+    </style>
+    <div class="blocks-demo">
+      <div class="block block-inference">
+        <div class="block-title">Inference</div>
+        <div class="block-chip" style="animation-delay: 0s">OpenAI</div>
+        <div class="block-chip" style="animation-delay: 0.1s">Anthropic</div>
+        <div class="block-chip" style="animation-delay: 0.2s">Google</div>
+        <div class="block-chip" style="animation-delay: 0.3s">Bedrock</div>
+        <div class="block-chip" style="animation-delay: 0.4s">Vertex AI</div>
+        <div class="block-chip" style="animation-delay: 0.5s">
+          DigitalOcean
+        </div>
+      </div>
+      <div class="block-shared">
+        <div class="shared-label">Shared Conventions</div>
+        <div class="shared-chip" style="animation-delay: 0.7s">Agents</div>
+        <div class="shared-chip" style="animation-delay: 0.9s">
+          Tools / Functions
+        </div>
+        <div class="shared-chip" style="animation-delay: 1.1s">MCPs</div>
+        <div class="shared-chip" style="animation-delay: 1.3s">
+          Sub Agents / Skills
+        </div>
+      </div>
+      <div class="block block-harness">
+        <div class="block-title">Harness</div>
+        <div class="block-chip" style="animation-delay: 0s">VS Code</div>
+        <div class="block-chip" style="animation-delay: 0.1s">
+          Copilot CLI
+        </div>
+        <div class="block-chip" style="animation-delay: 0.2s">
+          Claude Code
+        </div>
+        <div class="block-chip" style="animation-delay: 0.3s">Cursor</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="slide">
+  <div class="slide-text">
+    <h2>Inference and Tokens</h2>
+    <p>
+      What are tokens? Essentially words, but not exactly. They're the units
+      of text completion that have relationships expressed mathematically,
+      but for the sake of this discussion let's just think of them as words.
+    </p>
+    <p>
+      The LLMs we use when we refer to "chat" or "AI" are generally just
+      predicting tokens based on the tokens they receive as input.
+    </p>
+  </div>
+  <div class="slide-animation">
+    <div class="chatwin">
+      <div class="chatwin-header">
+        <span class="chatwin-dot"></span><span class="chatwin-dot"></span
+        ><span class="chatwin-dot"></span>
+      </div>
+      <div class="chatwin-body" id="chat-2"></div>
+      <div class="chatwin-input-row">
+        <div class="chatwin-input" id="chat-2-input"></div>
+        <button
+          class="chatwin-send"
+          id="chat-2-send"
+          aria-label="Send"
+          tabindex="-1"
+        >
+          ➤
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="slide">
+  <div class="slide-text">
+    <h2>Inference and Tokens</h2>
+    <p>
+      So we can think of our LLM completions as input tokens and output
+      tokens. When an LLM is generating output tokens, it's processing all
+      the prior tokens as input — including the tokens it's already output.
+    </p>
+    <p>
+      This is why context size matters so much — every token you get back in
+      a chat includes all the tokens before it as input. As the transcript
+      grows in length, so does the input for each token.
+    </p>
+    <p>
+      <strong>What's a "turn"?</strong> A turn is one request/response cycle
+      with the inference layer: you send input (system prompt + conversation
+      history + any tool results) and the model streams back output until it
+      stops for that request — either with a final answer or a tool-call
+      request. Tokens are billed per turn: once for the full input, once for
+      the total output generated in that turn. A single user message can
+      trigger several turns if the harness loops through tool calls before
+      returning a final answer (we'll see this in the coding harness
+      example).
+    </p>
+    <p>
+      Even though, under the hood, generating each output token technically
+      means reprocessing all prior tokens as input, you're not billed
+      per-token-of-context — just once per turn for input and output.
+    </p>
+    <p>
+      There are strategies for making this more efficient, like KV caching,
+      but that's out of scope for this talk.
+    </p>
+  </div>
+  <div class="slide-animation">
+    <style>
+      .slide3-stack {
+        display: flex;
+        flex-direction: column;
+        gap: 1.5rem;
+        align-items: center;
+        width: 100%;
+      }
+      .io-loop {
+        display: flex;
+        flex-direction: column;
+        gap: 0.5rem;
+        align-items: center;
+        opacity: 0;
+        transition: opacity 0.5s ease-out;
+        width: 100%;
+      }
+      .io-loop.active {
+        opacity: 1;
+      }
+      .io-tokens {
+        display: flex;
+        gap: 0.35rem;
+        flex-wrap: wrap;
+        justify-content: center;
+      }
+      .io-tok {
+        font-family: monospace;
+        font-size: 0.72rem;
+        border: 1px solid var(--border);
+        border-radius: 6px;
+        padding: 0.15rem 0.4rem;
+        color: var(--text-muted);
+        transition:
+          color 0.7s ease-out,
+          border-color 0.7s ease-out;
+      }
+      .io-tok.new-tok {
+        border-color: #22aa66;
+        color: #22aa66;
+      }
+      .io-arrow {
+        font-size: 0.9rem;
+        color: var(--text-subtle);
+      }
+      .io-model {
+        font-size: 0.85rem;
+        font-weight: bold;
+        color: var(--text-heading);
+        border: 2px solid #4444ff;
+        border-radius: 8px;
+        padding: 0.4rem 1rem;
+      }
+      .io-model.thinking {
+        animation: modelPulse 0.5s ease-in-out;
+      }
+      @keyframes modelPulse {
+        0%,
+        100% {
+          box-shadow: 0 0 0 0 rgba(68, 68, 255, 0);
+        }
+        50% {
+          box-shadow: 0 0 0 6px rgba(68, 68, 255, 0.28);
+        }
+      }
+      .io-output-row {
+        display: flex;
+        justify-content: center;
+        min-height: 1.8rem;
+      }
+      .io-output-tok {
+        font-family: monospace;
+        font-size: 0.85rem;
+        font-weight: bold;
+        border: 1px solid #22aa66;
+        border-radius: 6px;
+        padding: 0.2rem 0.6rem;
+        color: #22aa66;
+        opacity: 0;
+        transition: opacity 0.2s ease-out;
+      }
+      .io-caption {
+        font-size: 0.72rem;
+        color: var(--text-subtle);
+        text-align: center;
+        max-width: 280px;
+        min-height: 2.2em;
+      }
+    </style>
+    <div class="slide3-stack">
+      <div class="chatwin">
+        <div class="chatwin-header">
+          <span class="chatwin-dot"></span><span class="chatwin-dot"></span
+          ><span class="chatwin-dot"></span>
+        </div>
+        <div class="chatwin-body" id="chat-3"></div>
+        <div class="chatwin-input-row">
+          <div class="chatwin-input" id="chat-3-input"></div>
+          <button
+            class="chatwin-send"
+            id="chat-3-send"
+            aria-label="Send"
+            tabindex="-1"
+          >
+            ➤
+          </button>
+        </div>
+      </div>
+      <div class="io-loop" id="ioLoop-3">
+        <div class="io-tokens" id="ioTokens-3"></div>
+        <div class="io-arrow">↓ full input replayed through the model ↓</div>
+        <div class="io-model" id="ioModel-3">Model</div>
+        <div class="io-arrow">↓</div>
+        <div class="io-output-row">
+          <span class="io-output-tok" id="ioOutputTok-3"></span>
+        </div>
+        <div class="io-caption" id="ioCaption-3"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="slide">
+  <div class="slide-text">
+    <h2>Harness</h2>
+    <p>
+      Harnesses are generally the application or client interfacing with the
+      inference layer. The inference layer is only responsible for taking
+      input and producing output. When we use AI to "do things," the doing of
+      things is happening in the harness layer.
+    </p>
+    <p>
+      For instance, if you want an AI to give you the weather, you might have
+      a harness that has defined a tool <code>get_weather</code> that accepts
+      a location as an argument. The LLM isn't fetching weather — it's simply
+      outputting a request to call <code>get_weather</code> with some
+      arguments, and the harness is what actually executes that.
+    </p>
+  </div>
+  <div class="slide-animation">
+    <div class="chatwin">
+      <div class="chatwin-header">
+        <span class="chatwin-dot"></span><span class="chatwin-dot"></span
+        ><span class="chatwin-dot"></span>
+      </div>
+      <div class="chatwin-body" id="chat-4"></div>
+      <div class="chatwin-input-row">
+        <div class="chatwin-input" id="chat-4-input"></div>
+        <button
+          class="chatwin-send"
+          id="chat-4-send"
+          aria-label="Send"
+          tabindex="-1"
+        >
+          ➤
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="slide">
+  <div class="slide-text">
+    <h2>Shared Conventions</h2>
+    <p>
+      Wait, what are these tools and agents we keep mentioning? Right! Let's
+      go over the concepts shared between harness and inference.
+    </p>
+  </div>
+  <div class="slide-animation">
+    <style>
+      .bridge-chips {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.75rem;
+        justify-content: center;
+        padding: 1rem;
+      }
+      .bridge-chip {
+        font-size: 0.85rem;
+        font-weight: 600;
+        color: #22aa66;
+        border: 1px solid #22aa66;
+        border-radius: 999px;
+        padding: 0.4rem 1rem;
+      }
+    </style>
+    <div class="bridge-chips">
+      <div class="bridge-chip">Agents</div>
+      <div class="bridge-chip">Tools / Functions</div>
+      <div class="bridge-chip">MCPs</div>
+      <div class="bridge-chip">Sub Agents / Skills</div>
+    </div>
+  </div>
+</div>
+
+<div class="slide">
+  <div class="slide-text">
+    <h2>System Prompt</h2>
+    <p>
+      Most inference APIs provide an OpenAI-like interface for
+      chat/completions. Included in that structure is the concept of a
+      system prompt.
+    </p>
+    <p>
+      When creating a chat payload to send to an inference layer, you can
+      also supply a system prompt. This is a set of instructions for the LLM
+      to guide its response with. This is where you specify instructions or
+      give the LLM a "persona."
+    </p>
+  </div>
+  <div class="slide-animation">
+    <div class="payload-demo">
+      <div>
+        <div class="code-label">System Prompt</div>
+        <div class="code-box" id="sysPromptText-6"></div>
+      </div>
+      <div class="payload-box" id="payloadBox-6">
+        <div class="code-label">Chat Payload</div>
+        <div class="code-box" id="payloadText-6"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="slide">
+  <div class="slide-text">
+    <h2>Agents</h2>
+    <p>
+      "AI Agent" is an overloaded term, but in the context of a harness, an
+      Agent is essentially a system prompt with some additional conventions
+      — most notably a declared list of tools it's allowed to use.
+    </p>
+    <p>
+      Most harnesses define their Agent files with frontmatter — a markdown
+      convention of triple-dash (<code>---</code>) delimiters with YAML in
+      between, placed at the top of the file.
+    </p>
+    <p>
+      This allows for storing metadata, but most importantly it can
+      communicate which tools are available.
+    </p>
+  </div>
+  <div class="slide-animation">
+    <div class="payload-demo">
+      <div>
+        <div class="code-label">agent.md</div>
+        <div class="code-box" id="frontmatterText-7"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="slide">
+  <div class="slide-text">
+    <h2>Sub Agents and Skills</h2>
+    <p>
+      <strong>Sub Agents:</strong> an Agent that another Agent can invoke
+      like a tool — useful for delegating a scoped task (e.g., research,
+      code search) without cluttering the parent conversation's context.
+    </p>
+    <p>
+      <strong>Skills:</strong> a packaged, on-demand set of instructions
+      (and sometimes scripts/resources) that an Agent loads only when the
+      task matches — keeping specialized knowledge out of the system prompt
+      until it's actually needed.
+    </p>
+  </div>
+  <div class="slide-animation">
+    <div class="concept-cards">
+      <div class="concept-card">
+        <div class="concept-card-title">Sub Agent</div>
+        <div class="concept-card-body">
+          Invoked like a tool. Runs its own scoped conversation, then returns
+          a result to the parent.
+        </div>
+      </div>
+      <div class="concept-card">
+        <div class="concept-card-title">Skill</div>
+        <div class="concept-card-body">
+          Loaded on demand when the task matches. Keeps the base system
+          prompt lean until it's actually needed.
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="slide">
+  <div class="slide-text">
+    <h2>Tools/Functions</h2>
+    <p>
+      Tools/functions are similar to system prompts in that they're a
+      standard interface for chat/completion inference layers.
+    </p>
+    <p>
+      You define tools in your chat payload and specify what each one does
+      and the input parameters (if any) it expects.
+    </p>
+    <p>
+      LLMs can then determine if they have enough context to execute a tool
+      you've defined, and if so, will return a tool execution request.
+    </p>
+    <p>
+      The harness is responsible for executing the tool, not the inference
+      layer. The LLM is simply predicting tokens — that's it.
+    </p>
+  </div>
+  <div class="slide-animation">
+    <div class="stack-col">
+      <div style="width: 100%; max-width: 380px">
+        <div class="code-label">Tool Definition</div>
+        <div class="code-box" id="toolDefText-8"></div>
+      </div>
+      <div class="chatwin">
+        <div class="chatwin-header">
+          <span class="chatwin-dot"></span><span class="chatwin-dot"></span
+          ><span class="chatwin-dot"></span>
+        </div>
+        <div class="chatwin-body" id="chat-8"></div>
+        <div class="chatwin-input-row">
+          <div class="chatwin-input" id="chat-8-input"></div>
+          <button
+            class="chatwin-send"
+            id="chat-8-send"
+            aria-label="Send"
+            tabindex="-1"
+          >
+            ➤
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="slide">
+  <div class="slide-text">
+    <h2>Agents and Tools</h2>
+    <p>
+      So in the frontmatter, agents can specify tools available to them —
+      but this is merely a convention. The inference layer does not have
+      enough information on its own to know what or how to call the tool.
+    </p>
+    <p>
+      The harness needs to parse the tools list and provide its tool
+      definitions accordingly.
+    </p>
+    <p>
+      Some tools are local, like searching the local file system (coding
+      harnesses do this), and some are bespoke to the harness. Others are
+      more generic, like creating a GitHub issue.
+    </p>
+    <p>
+      It would be unmanageable to teach every harness how to create a GitHub
+      issue and distribute that tool definition around. This is what led to
+      the Model Context Protocol (MCP).
+    </p>
+  </div>
+  <div class="slide-animation">
+    <style>
+      .flow-demo {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 0.6rem;
+        width: 100%;
+        padding: 1rem;
+      }
+      .flow-row {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        flex-wrap: wrap;
+        justify-content: center;
+      }
+      .flow-box {
+        border: 1px solid var(--border);
+        border-radius: 8px;
+        padding: 0.5rem 0.75rem;
+        font-size: 0.72rem;
+        font-family: monospace;
+        background: var(--bg);
+        color: var(--text-muted);
+        text-align: center;
+        opacity: 0;
+        animation: flowIn 5s ease-in-out infinite;
+      }
+      .flow-arrow {
+        font-size: 0.85rem;
+        color: var(--text-subtle);
+        opacity: 0;
+        animation: flowIn 5s ease-in-out infinite;
+      }
+      @keyframes flowIn {
+        0%,
+        4% {
+          opacity: 0;
+          transform: translateY(-4px);
+        }
+        14%,
+        90% {
+          opacity: 1;
+          transform: translateY(0);
+        }
+        100% {
+          opacity: 0;
+          transform: translateY(4px);
+        }
+      }
+    </style>
+    <div class="flow-demo">
+      <div class="flow-row">
+        <div class="flow-box" style="animation-delay: 0s">
+          Agent frontmatter<br />tools: [grep, read_file]
+        </div>
+      </div>
+      <div class="flow-arrow" style="animation-delay: 0.3s">
+        ↓ harness parses list
+      </div>
+      <div class="flow-row">
+        <div class="flow-box" style="animation-delay: 0.6s">grep def</div>
+        <div class="flow-box" style="animation-delay: 0.75s">
+          read_file def
+        </div>
+      </div>
+      <div class="flow-arrow" style="animation-delay: 1s">↓ merged into</div>
+      <div class="flow-row">
+        <div class="flow-box" style="animation-delay: 1.3s">
+          Chat Request<br />(system + tools + messages)
+        </div>
+      </div>
+      <div class="flow-arrow" style="animation-delay: 1.6s">→ Inference</div>
+    </div>
+  </div>
+</div>
+
+<div class="slide">
+  <div class="slide-text">
+    <h2>MCPs</h2>
+    <p>
+      MCPs are a way to publish and make tools (and their execution)
+      accessible remotely.
+    </p>
+    <p>
+      There are all sorts of details around MCPs that are out of scope here,
+      like transport layers and OAuth (and MCP also covers things beyond
+      tools, like resources and prompt templates) — for now just think of
+      MCP as a standard API for AI tools.
+    </p>
+  </div>
+  <div class="slide-animation">
+    <style>
+      .mcp-demo {
+        display: flex;
+        flex-direction: column;
+        gap: 0.75rem;
+        width: 100%;
+        max-width: 420px;
+      }
+      .mcp-parties {
+        display: flex;
+        justify-content: space-between;
+        font-size: 0.75rem;
+        font-weight: bold;
+        color: var(--text-heading);
+        padding: 0 0.25rem;
+      }
+      .mcp-msgs {
+        display: flex;
+        flex-direction: column;
+        gap: 0.5rem;
+      }
+      .mcp-msg {
+        display: flex;
+      }
+      .mcp-msg.from-harness {
+        justify-content: flex-start;
+      }
+      .mcp-msg.from-mcp {
+        justify-content: flex-end;
+      }
+      .mcp-bubble {
+        max-width: 80%;
+        font-family: monospace;
+        font-size: 0.72rem;
+        border: 1px solid var(--border);
+        border-radius: 8px;
+        padding: 0.5rem 0.65rem;
+        white-space: pre-wrap;
+        opacity: 0;
+        transform: translateY(6px);
+        transition:
+          opacity 0.4s,
+          transform 0.4s;
+      }
+      .mcp-msg.from-harness .mcp-bubble {
+        background: var(--border-subtle);
+        color: var(--text);
+      }
+      .mcp-msg.from-mcp .mcp-bubble {
+        background: var(--bg);
+        border-color: #22aa66;
+        color: var(--text);
+      }
+    </style>
+    <div class="mcp-demo">
+      <div class="mcp-parties"><span>Harness</span><span>MCP Server</span></div>
+      <div class="mcp-msgs" id="mcpMsgs-10"></div>
+    </div>
+  </div>
+</div>
+
+<div class="slide">
+  <div class="slide-text">
+    <h2>Coding Harness</h2>
+    <p>
+      Let's look at how all these components work together in a coding
+      harness. Say we have a project of code that has a bug in it.
+    </p>
+    <p>
+      As users, we'll want to ask it to find and fix the bug — so we'll
+      start with a simple description of the bug and ask it to fix it.
+    </p>
+  </div>
+  <div class="slide-animation">
+    <div class="chatwin">
+      <div class="chatwin-header">
+        <span class="chatwin-dot"></span><span class="chatwin-dot"></span
+        ><span class="chatwin-dot"></span>
+      </div>
+      <div class="chatwin-body" id="chat-11"></div>
+      <div class="chatwin-input-row">
+        <div class="chatwin-input" id="chat-11-input"></div>
+        <button
+          class="chatwin-send"
+          id="chat-11-send"
+          aria-label="Send"
+          tabindex="-1"
+        >
+          ➤
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="slide">
+  <div class="slide-text">
+    <h2>Coding Harness</h2>
+    <p>
+      Included in this request is a system prompt and the harness's tool
+      definitions.
+    </p>
+    <p>One of the tools is likely a <code>grep</code>-like tool.</p>
+    <p>
+      So the inference layer will likely output some acknowledgment text
+      plus a tool-execute request — this is turn one.
+    </p>
+  </div>
+  <div class="slide-animation">
+    <div class="chatwin">
+      <div class="chatwin-header">
+        <span class="chatwin-dot"></span><span class="chatwin-dot"></span
+        ><span class="chatwin-dot"></span>
+      </div>
+      <div class="chatwin-body" id="chat-12"></div>
+    </div>
+  </div>
+</div>
+
+<div class="slide">
+  <div class="slide-text">
+    <h2>Coding Harness</h2>
+    <p>
+      The harness executes the tool and appends the results to the
+      conversation as a tool-result message — this isn't something the human
+      user typed, it's the harness relaying data back to the model — then
+      sends everything back to the inference layer for the next turn.
+    </p>
+    <p>
+      Based on these results, the LLM will likely decide to read a portion
+      of a specific file.
+    </p>
+  </div>
+  <div class="slide-animation">
+    <div class="chatwin">
+      <div class="chatwin-header">
+        <span class="chatwin-dot"></span><span class="chatwin-dot"></span
+        ><span class="chatwin-dot"></span>
+      </div>
+      <div class="chatwin-body autoscroll" id="chat-13"></div>
+    </div>
+  </div>
+</div>
+
+<div class="slide">
+  <div class="slide-text">
+    <h2>Coding Harness</h2>
+    <p>
+      The LLM then concludes the source of the problem — because it was
+      given the right information, which it figured out how to obtain on
+      its own across the last couple of turns.
+    </p>
+    <p>
+      It'll output a brief explanation of what it thinks is wrong, then
+      propose a solution in the form of a patch tool call.
+    </p>
+  </div>
+  <div class="slide-animation">
+    <div class="chatwin">
+      <div class="chatwin-header">
+        <span class="chatwin-dot"></span><span class="chatwin-dot"></span
+        ><span class="chatwin-dot"></span>
+      </div>
+      <div class="chatwin-body autoscroll" id="chat-14"></div>
+    </div>
+  </div>
+</div>
+
+<div class="slide">
+  <div class="slide-text">
+    <h2>Tokens Add Up</h2>
+    <p>
+      In this simple example, you can see how tokens add up and aggregate
+      per turn — and how one user message turned into several billed turns
+      before the final answer came back.
+    </p>
+  </div>
+  <div class="slide-animation">
+    <style>
+      .turns-table {
+        width: 100%;
+        max-width: 420px;
+        display: flex;
+        flex-direction: column;
+        gap: 0.5rem;
+      }
+      .turns-row {
+        display: grid;
+        grid-template-columns: 3rem 1fr 1fr;
+        gap: 0.5rem;
+        align-items: center;
+        font-size: 0.78rem;
+      }
+      .turns-row.head {
+        color: var(--text-subtle);
+        font-weight: bold;
+        text-transform: uppercase;
+        font-size: 0.62rem;
+        letter-spacing: 0.05em;
+      }
+      .turns-label {
+        color: var(--text-muted);
+      }
+      .turns-bar-wrap {
+        position: relative;
+        background: var(--border-subtle);
+        border-radius: 4px;
+        height: 1.1rem;
+        overflow: hidden;
+      }
+      .turns-bar {
+        position: absolute;
+        left: 0;
+        top: 0;
+        bottom: 0;
+        width: 0%;
+        border-radius: 4px;
+        transition: width 0.6s ease-out;
+      }
+      .turns-bar.input {
+        background: #4444ff;
+      }
+      .turns-bar.output {
+        background: #22aa66;
+      }
+      .turns-bar-label {
+        position: absolute;
+        right: 0.35rem;
+        top: 0;
+        bottom: 0;
+        display: flex;
+        align-items: center;
+        font-size: 0.68rem;
+        color: var(--text-heading);
+        font-family: monospace;
+      }
+      .turns-total {
+        display: flex;
+        justify-content: space-between;
+        font-size: 0.8rem;
+        padding-top: 0.5rem;
+        margin-top: 0.25rem;
+        border-top: 1px solid var(--border);
+        color: var(--text-heading);
+        font-weight: bold;
+      }
+    </style>
+    <div class="turns-table" id="turnsTable-15">
+      <div class="turns-row head">
+        <span></span><span>Input tokens</span><span>Output tokens</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="slide">
+  <div class="slide-text">
+    <h2>What's Out of Scope (For Now)</h2>
+    <p>
+      We've covered the core mental model: inference, harness, and the
+      shared concepts connecting them.
+    </p>
+    <p>
+      A couple of things we intentionally skipped: some models have native
+      web search built in (functioning like a hosted tool the provider runs
+      for you), and some are "reasoning" models with extended
+      chain-of-thought before answering. Both are worth their own talk, but
+      aren't needed to understand the core concepts here.
+    </p>
+  </div>
+  <div class="slide-animation">
+    <div class="concept-cards">
+      <div class="concept-card">
+        <div class="concept-card-title">Native Web Search</div>
+        <div class="concept-card-body">
+          A hosted tool the provider runs for you — looks like a tool call,
+          but you don't implement it.
+        </div>
+      </div>
+      <div class="concept-card">
+        <div class="concept-card-title">Reasoning Models</div>
+        <div class="concept-card-body">
+          Extended chain-of-thought before the final answer, often billed as
+          its own token category.
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  /* ================= Shared chat helpers ================= */
+  function sleep(ms) {
+    return new Promise((resolve) => setTimeout(resolve, ms));
+  }
+  function nextFrame() {
+    return new Promise((resolve) => requestAnimationFrame(() => resolve()));
+  }
+
+  async function typeChars(el, text, speed = 26) {
+    el.textContent = "";
+    el.classList.add("streaming");
+    for (let i = 0; i < text.length; i++) {
+      el.textContent = text.slice(0, i + 1);
+      await sleep(speed);
+    }
+    el.classList.remove("streaming");
+  }
+
+  function tokenize(text) {
+    return text.split(/(\s+)/).filter((s) => s.length > 0);
+  }
+
+  async function typeTokens(el, text, speed = 90) {
+    const tokens = tokenize(text);
+    el.textContent = "";
+    el.classList.add("streaming");
+    for (const t of tokens) {
+      el.textContent += t;
+      await sleep(speed);
+    }
+    el.classList.remove("streaming");
+  }
+
+  async function addUserMessage(container, text, opts = {}) {
+    const { animate = true, speed = 26, inputEl = null, sendBtn = null } =
+      opts;
+
+    // If an input row is provided, "type" the message there first, then
+    // simulate pressing send before it appears as a bubble in the log.
+    if (inputEl && animate) {
+      inputEl.textContent = "";
+      await typeChars(inputEl, text, speed);
+      await sleep(350);
+      if (sendBtn) {
+        sendBtn.classList.add("active");
+        await sleep(220);
+        sendBtn.classList.remove("active");
+      }
+      inputEl.textContent = "";
+    } else if (inputEl) {
+      inputEl.textContent = "";
+    }
+
+    const wrap = document.createElement("div");
+    wrap.className = "msg msg-user";
+    const bubble = document.createElement("div");
+    bubble.className = "msg-bubble";
+    wrap.appendChild(bubble);
+
+    if (inputEl) {
+      // Text was already "typed" into the input, so just reveal the bubble.
+      bubble.textContent = text;
+      container.appendChild(wrap);
+      if (animate) {
+        bubble.style.opacity = "0";
+        bubble.style.transform = "translateY(8px)";
+        await nextFrame();
+        bubble.style.transition =
+          "opacity .3s ease-out, transform .3s ease-out";
+        bubble.style.opacity = "1";
+        bubble.style.transform = "translateY(0)";
+        await sleep(250);
+      }
+    } else {
+      container.appendChild(wrap);
+      if (animate) {
+        await typeChars(bubble, text, speed);
+      } else {
+        bubble.textContent = text;
+      }
+    }
+
+    return wrap;
+  }
+
+  function buildToolCard(kind, name, bodyText) {
+    const card = document.createElement("div");
+    card.className = `tool-card tool-${kind}`;
+    const head = document.createElement("div");
+    head.className = "tool-card-head";
+
+    const actor = document.createElement("span");
+    actor.className = "tool-actor";
+    actor.textContent = kind === "call" ? "Model" : "Harness";
+
+    const action = document.createElement("span");
+    action.className = "tool-action";
+    action.textContent =
+      kind === "call" ? `requests ${name}(...)` : `ran ${name}()`;
+
+    head.appendChild(actor);
+    head.appendChild(action);
+
+    const body = document.createElement("div");
+    body.className = "tool-card-body";
+    body.textContent = bodyText;
+    card.appendChild(head);
+    card.appendChild(body);
+    return card;
+  }
+
+  async function addAssistantMessage(container, opts = {}) {
+    const { text, toolCall, animate = true, tokenSpeed = 90 } = opts;
+    const wrap = document.createElement("div");
+    wrap.className = "msg msg-assistant";
+    container.appendChild(wrap);
+
+    if (text) {
+      const bubble = document.createElement("div");
+      bubble.className = "msg-bubble";
+      wrap.appendChild(bubble);
+      if (animate) {
+        await typeTokens(bubble, text, tokenSpeed);
+      } else {
+        bubble.textContent = text;
+      }
+    }
+
+    if (toolCall) {
+      const card = buildToolCard("call", toolCall.name, toolCall.argsText);
+      wrap.appendChild(card);
+      if (animate) {
+        card.style.opacity = "0";
+        card.style.transform = "translateY(6px)";
+        await nextFrame();
+        card.style.opacity = "1";
+        card.style.transform = "translateY(0)";
+        await sleep(400);
+      }
+    }
+    return wrap;
+  }
+
+  async function addToolResult(container, name, text, opts = {}) {
+    const { animate = true } = opts;
+    const wrap = document.createElement("div");
+    wrap.className = "msg msg-tool";
+    const card = buildToolCard("result", name, text);
+    wrap.appendChild(card);
+    container.appendChild(wrap);
+    if (animate) {
+      card.style.opacity = "0";
+      await nextFrame();
+      card.style.opacity = "1";
+      await sleep(400);
+    }
+    return wrap;
+  }
+
+  /* Keep a scrolling container pinned to the bottom continuously as content
+     is added/typed into it, rather than jumping down only once a message
+     has finished animating in. This makes room for a new message the
+     moment it starts appearing, instead of after the fact. */
+  function enableAutoScroll(container) {
+    if (container._autoScrollObserver) return;
+    const observer = new MutationObserver(() => {
+      container.scrollTop = container.scrollHeight;
+    });
+    observer.observe(container, {
+      childList: true,
+      subtree: true,
+      characterData: true,
+    });
+    container._autoScrollObserver = observer;
+  }
+
+  /* Gate a per-slide animation on scroll visibility. `playFn` should reset
+     its own container each time it's called so it can safely replay. */
+  function gateOnScroll(el, playFn, opts = {}) {
+    const { threshold = 0.3 } = opts;
+    if (!el) return;
+    let playing = false;
+    const io = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            if (playing) return;
+            playing = true;
+            Promise.resolve(playFn()).finally(() => {
+              // playing resets on next exit below
+            });
+          } else {
+            playing = false;
+          }
+        });
+      },
+      { threshold },
+    );
+    io.observe(el);
+  }
+
+  /* ================= Slide 2 ================= */
+  async function playSlide2() {
+    const body = document.getElementById("chat-2");
+    const inputEl = document.getElementById("chat-2-input");
+    const sendBtn = document.getElementById("chat-2-send");
+    if (!body) return;
+    body.innerHTML = "";
+    if (inputEl) inputEl.textContent = "";
+    await addUserMessage(body, "What's the capital of France?", {
+      inputEl,
+      sendBtn,
+    });
+    await sleep(400);
+    await addAssistantMessage(body, {
+      text: "The capital of France is Paris.",
+    });
+  }
+
+  /* ================= Slide 3 ================= */
+  function appendIoToken(container, text, highlight = false) {
+    const span = document.createElement("span");
+    span.className = highlight ? "io-tok new-tok" : "io-tok";
+    span.textContent = text;
+    container.appendChild(span);
+    if (highlight) {
+      setTimeout(() => span.classList.remove("new-tok"), 900);
+    }
+    return span;
+  }
+
+  function pulseOnce(el, cls, duration) {
+    el.classList.remove(cls);
+    void el.offsetWidth; // restart the CSS animation
+    el.classList.add(cls);
+    return sleep(duration);
+  }
+
+  async function playSlide3() {
+    const body = document.getElementById("chat-3");
+    const loop = document.getElementById("ioLoop-3");
+    const ioTokens = document.getElementById("ioTokens-3");
+    const ioModel = document.getElementById("ioModel-3");
+    const ioOutputTok = document.getElementById("ioOutputTok-3");
+    const ioCaption = document.getElementById("ioCaption-3");
+    const inputEl = document.getElementById("chat-3-input");
+    const sendBtn = document.getElementById("chat-3-send");
+    if (!body || !loop || !ioTokens || !ioModel || !ioOutputTok) return;
+
+    body.innerHTML = "";
+    if (inputEl) inputEl.textContent = "";
+    ioTokens.innerHTML = "";
+    ioOutputTok.textContent = "";
+    ioOutputTok.style.opacity = "0";
+    if (ioCaption) ioCaption.textContent = "";
+    loop.classList.remove("active");
+
+    const question = "What's the capital of France?";
+    await addUserMessage(body, question, { inputEl, sendBtn });
+    await sleep(300);
+    loop.classList.add("active");
+
+    // Seed the input token list with the "hidden" context (system prompt +
+    // the user's question) that's already part of this turn's input.
+    const seedTokens = ["system:", "You're", "concise.", ...question.split(" ")];
+    seedTokens.forEach((t) => appendIoToken(ioTokens, t));
+    if (ioCaption) {
+      ioCaption.textContent = `${seedTokens.length} tokens of input so far`;
+    }
+    await sleep(500);
+
+    // Build the assistant bubble token-by-token, in lockstep with the
+    // input → model → output loop below: each token is printed in the chat
+    // the instant it's produced, then folded back into the input list that
+    // gets fully replayed through the model to produce the next one.
+    const wrap = document.createElement("div");
+    wrap.className = "msg msg-assistant";
+    const bubble = document.createElement("div");
+    bubble.className = "msg-bubble streaming";
+    wrap.appendChild(bubble);
+    body.appendChild(wrap);
+
+    const answerTokens = ["The", "capital", "of", "France", "is", "Paris."];
+    let text = "";
+
+    for (let i = 0; i < answerTokens.length; i++) {
+      const tok = answerTokens[i];
+      const inputCount = seedTokens.length + i;
+
+      if (ioCaption) {
+        ioCaption.textContent = `feeding ${inputCount} tokens through the model...`;
+      }
+      await pulseOnce(ioModel, "thinking", 450);
+
+      // ...a token comes out the other side...
+      ioOutputTok.textContent = tok;
+      ioOutputTok.style.opacity = "1";
+      await sleep(200);
+
+      // ...it's printed in the chat immediately...
+      text += (text ? " " : "") + tok;
+      bubble.textContent = text;
+
+      // ...and it's appended back into the input, ready to be resent in
+      // full for the next token.
+      appendIoToken(ioTokens, tok, true);
+      if (ioCaption) {
+        ioCaption.textContent = `"${tok}" appended back in as input for the next token`;
+      }
+
+      await sleep(350);
+      ioOutputTok.style.opacity = "0";
+      await sleep(200);
+    }
+
+    bubble.classList.remove("streaming");
+    if (ioCaption) {
+      const totalIn = seedTokens.length + answerTokens.length;
+      ioCaption.textContent = `turn billed once: ${totalIn} input tokens, ${answerTokens.length} output tokens`;
+    }
+  }
+
+  /* ================= Slide 4 ================= */
+  async function playSlide4() {
+    const body = document.getElementById("chat-4");
+    const inputEl = document.getElementById("chat-4-input");
+    const sendBtn = document.getElementById("chat-4-send");
+    if (!body) return;
+    body.innerHTML = "";
+    if (inputEl) inputEl.textContent = "";
+    await addUserMessage(body, "What's the weather in Minneapolis?", {
+      inputEl,
+      sendBtn,
+    });
+    await sleep(400);
+    await addAssistantMessage(body, {
+      toolCall: {
+        name: "get_weather",
+        argsText: '{ "location": "Minneapolis, MN" }',
+      },
+    });
+    await sleep(500);
+    await addToolResult(
+      body,
+      "get_weather",
+      '{ "condition": "snow", "temp_f": 24 }',
+    );
+    await sleep(500);
+    await addAssistantMessage(body, {
+      text: "It's snowy right now, about 24°F.",
+    });
+  }
+
+  /* ================= Slide 6: System Prompt ================= */
+  async function playSlide6() {
+    const sys = document.getElementById("sysPromptText-6");
+    const payloadBox = document.getElementById("payloadBox-6");
+    const payloadText = document.getElementById("payloadText-6");
+    if (!sys || !payloadBox || !payloadText) return;
+    sys.textContent = "";
+    payloadBox.classList.remove("show");
+    payloadText.textContent = "";
+
+    await typeChars(
+      sys,
+      "You are a helpful assistant. Be concise, and cite your sources when possible.",
+      18,
+    );
+    await sleep(400);
+    payloadText.textContent =
+      '{\n  "system": "You are a helpful assistant...",\n  "messages": [\n    { "role": "user", "content": "What\'s the capital of France?" }\n  ]\n}';
+    payloadBox.classList.add("show");
+  }
+
+  /* ================= Slide 7: Agents ================= */
+  async function playSlide7() {
+    const el = document.getElementById("frontmatterText-7");
+    if (!el) return;
+    el.textContent = "";
+    const full =
+      "---\nname: research-agent\ntools:\n  - web_search\n  - read_file\n---\n\nYou are a helpful assistant. Be concise, and cite your sources when possible.";
+    await typeChars(el, full, 12);
+  }
+
+  /* ================= Slide 8: Tools/Functions ================= */
+  async function playSlide8() {
+    const def = document.getElementById("toolDefText-8");
+    const body = document.getElementById("chat-8");
+    const inputEl = document.getElementById("chat-8-input");
+    const sendBtn = document.getElementById("chat-8-send");
+    if (!def || !body) return;
+    def.textContent = "";
+    body.innerHTML = "";
+    if (inputEl) inputEl.textContent = "";
+
+    const toolDef =
+      '{\n  "name": "get_weather",\n  "description": "Get current weather for a location",\n  "parameters": { "location": "string" }\n}';
+    await typeChars(def, toolDef, 10);
+    await sleep(400);
+    await addUserMessage(body, "What's the weather in Minneapolis?", {
+      inputEl,
+      sendBtn,
+    });
+    await sleep(300);
+    await addAssistantMessage(body, {
+      toolCall: {
+        name: "get_weather",
+        argsText: '{ "location": "Minneapolis, MN" }',
+      },
+    });
+  }
+
+  /* ================= Slide 10: MCPs ================= */
+  async function addMcpMsg(container, from, text) {
+    const row = document.createElement("div");
+    row.className = `mcp-msg from-${from}`;
+    const bubble = document.createElement("div");
+    bubble.className = "mcp-bubble";
+    bubble.textContent = text;
+    row.appendChild(bubble);
+    container.appendChild(row);
+    await nextFrame();
+    bubble.style.opacity = "1";
+    bubble.style.transform = "translateY(0)";
+    await sleep(600);
+  }
+
+  async function playSlide10() {
+    const wrap = document.getElementById("mcpMsgs-10");
+    if (!wrap) return;
+    wrap.innerHTML = "";
+    await addMcpMsg(wrap, "harness", "list_tools()");
+    await addMcpMsg(wrap, "mcp", '["create_github_issue", "search_docs"]');
+    await addMcpMsg(
+      wrap,
+      "harness",
+      'call_tool("create_github_issue", { title, body })',
+    );
+    await addMcpMsg(
+      wrap,
+      "mcp",
+      '{ "issue_url": "https://github.com/.../issues/42" }',
+    );
+  }
+
+  /* ================= Slides 11-14: Coding Harness (accumulating transcript) =================
+     Each slide renders the FULL transcript up to that point: earlier items appear
+     instantly/static (already there), and only the newest items for that slide
+     animate in. This avoids needing to physically share one DOM node across four
+     separate slide sections. */
+  const codingItems = [
+    {
+      type: "user",
+      text: "I'm having trouble with my app, when I push 'save' nothing saves.",
+    },
+    {
+      type: "assistant",
+      text: "Certainly, I can help with that.",
+      toolCall: { name: "grep", argsText: '{ "pattern": "save", "path": "." }' },
+    },
+    {
+      type: "tool",
+      name: "grep",
+      text: 'controls.jsx:42:  <button className="save-btn">Save</button>\ncontrols.jsx:58:  function handleSave() { ... }',
+    },
+    {
+      type: "assistant",
+      toolCall: { name: "read_file", argsText: '{ "path": "controls.jsx" }' },
+    },
+    {
+      type: "tool",
+      name: "read_file",
+      text: "40: <button className=\"save-btn\">Save</button>\n41: \n...\n58: function handleSave() {\n59:   saveData(formState);\n60: }",
+    },
+    {
+      type: "assistant",
+      text: "I think the problem is you don't have a click handler on the save button.",
+      toolCall: {
+        name: "patch_file",
+        argsText:
+          '{ "path": "controls.jsx", "diff": "+ onClick={handleSave}" }',
+      },
+    },
+    {
+      type: "tool",
+      name: "patch_file",
+      text: "Patch applied successfully.",
+    },
+    {
+      type: "assistant",
+      text: "Fixed it — I added an onClick handler that calls handleSave, so pressing Save now saves your changes.",
+    },
+  ];
+
+  async function renderCodingItem(container, item, animate, extra = {}) {
+    if (item.type === "user") {
+      return addUserMessage(container, item.text, { animate, ...extra });
+    }
+    if (item.type === "assistant") {
+      return addAssistantMessage(container, {
+        text: item.text,
+        toolCall: item.toolCall,
+        animate,
+      });
+    }
+    if (item.type === "tool") {
+      return addToolResult(container, item.name, item.text, { animate });
+    }
+  }
+
+  async function playCodingSlide(
+    containerId,
+    staticCount,
+    newCount,
+    autoscroll,
+    opts = {},
+  ) {
+    const container = document.getElementById(containerId);
+    if (!container) return;
+    container.innerHTML = "";
+    if (autoscroll) enableAutoScroll(container);
+
+    for (let i = 0; i < staticCount; i++) {
+      await renderCodingItem(container, codingItems[i], false);
+    }
+
+    for (let i = staticCount; i < staticCount + newCount; i++) {
+      // The very first item (the human's bug report) is the only one typed
+      // through a visible input row; everything after is model/tool driven.
+      const extra = i === 0 ? opts : {};
+      await renderCodingItem(container, codingItems[i], true, extra);
+      await sleep(300);
+    }
+  }
+
+  async function playSlide11() {
+    const inputEl = document.getElementById("chat-11-input");
+    const sendBtn = document.getElementById("chat-11-send");
+    if (inputEl) inputEl.textContent = "";
+    await playCodingSlide("chat-11", 0, 1, false, { inputEl, sendBtn });
+  }
+  async function playSlide12() {
+    await playCodingSlide("chat-12", 1, 1, false);
+  }
+  async function playSlide13() {
+    await playCodingSlide("chat-13", 2, 2, true);
+  }
+  async function playSlide14() {
+    await playCodingSlide("chat-14", 4, 4, true);
+  }
+
+  /* ================= Slide 15: Tokens Add Up ================= */
+  const turnStats = [
+    { turn: 1, input: 400, output: 25 },
+    { turn: 2, input: 465, output: 12 },
+    { turn: 3, input: 567, output: 55 },
+    { turn: 4, input: 637, output: 20 },
+  ];
+
+  function animateCountUp(labels, duration = 500) {
+    return new Promise((resolve) => {
+      const start = performance.now();
+      function step(now) {
+        const t = Math.min((now - start) / duration, 1);
+        labels.forEach((label) => {
+          const target = parseInt(label.dataset.val, 10);
+          label.textContent = Math.round(target * t);
+        });
+        if (t < 1) {
+          requestAnimationFrame(step);
+        } else {
+          resolve();
+        }
+      }
+      requestAnimationFrame(step);
+    });
+  }
+
+  async function playSlide15() {
+    const table = document.getElementById("turnsTable-15");
+    if (!table) return;
+    table.querySelectorAll(".turns-row:not(.head)").forEach((r) => r.remove());
+    const existingTotal = table.querySelector(".turns-total");
+    if (existingTotal) existingTotal.remove();
+
+    const maxInput = Math.max(...turnStats.map((t) => t.input));
+
+    for (const stat of turnStats) {
+      const row = document.createElement("div");
+      row.className = "turns-row";
+      row.innerHTML = `
+        <span class="turns-label">#${stat.turn}</span>
+        <span class="turns-bar-wrap"><span class="turns-bar input"></span><span class="turns-bar-label" data-val="${stat.input}">0</span></span>
+        <span class="turns-bar-wrap"><span class="turns-bar output"></span><span class="turns-bar-label" data-val="${stat.output}">0</span></span>
+      `;
+      table.appendChild(row);
+      await nextFrame();
+      row.querySelector(".turns-bar.input").style.width =
+        `${(stat.input / maxInput) * 100}%`;
+      row.querySelector(".turns-bar.output").style.width =
+        `${(stat.output / maxInput) * 100}%`;
+      await animateCountUp(row.querySelectorAll(".turns-bar-label"));
+      await sleep(200);
+    }
+
+    const totalInput = turnStats.reduce((a, b) => a + b.input, 0);
+    const totalOutput = turnStats.reduce((a, b) => a + b.output, 0);
+    const totalRow = document.createElement("div");
+    totalRow.className = "turns-total";
+    totalRow.innerHTML = `<span>Total billed</span><span>${totalInput} in / ${totalOutput} out</span>`;
+    table.appendChild(totalRow);
+  }
+
+  function initAnimations() {
+    const gates = [
+      ["chat-2", playSlide2],
+      ["chat-3", playSlide3],
+      ["chat-4", playSlide4],
+      ["sysPromptText-6", playSlide6],
+      ["frontmatterText-7", playSlide7],
+      ["chat-8", playSlide8],
+      ["mcpMsgs-10", playSlide10],
+      ["chat-11", playSlide11],
+      ["chat-12", playSlide12],
+      ["chat-13", playSlide13],
+      ["chat-14", playSlide14],
+      ["turnsTable-15", playSlide15],
+    ];
+
+    gates.forEach(([id, playFn]) => {
+      const el = document.getElementById(id);
+      if (el) gateOnScroll(el.closest(".slide"), playFn);
+    });
+  }
+
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", initAnimations);
+  } else {
+    initAnimations();
+  }
+</script>
