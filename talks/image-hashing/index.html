@@ -866,12 +866,25 @@ description: A visual guide to perceptual image hashing using the average hash m
 </div>
 
 <script>
+  function prepareCanvas(canvas, width, height) {
+    const pixelRatio = window.devicePixelRatio || 1;
+    canvas.width = Math.round(width * pixelRatio);
+    canvas.height = Math.round(height * pixelRatio);
+    canvas.style.width = `${width}px`;
+
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return null;
+
+    ctx.setTransform(pixelRatio, 0, 0, pixelRatio, 0, 0);
+    return ctx;
+  }
+
   // Intro animation - demonstrate the concept
   function animateIntro() {
     const canvas = document.getElementById("introCanvas");
     if (!canvas) return;
 
-    const ctx = canvas.getContext("2d");
+    const ctx = prepareCanvas(canvas, 320, 240);
     if (!ctx) return;
 
     const stageDiv = document.getElementById("introStage");
@@ -1079,34 +1092,36 @@ description: A visual guide to perceptual image hashing using the average hash m
     const canvas = document.getElementById("sourceCanvas");
     if (!canvas) return;
 
-    const ctx = canvas.getContext("2d");
     const maxSize = 300;
     const scale = Math.min(
       maxSize / sourceImage.width,
       maxSize / sourceImage.height,
     );
 
-    canvas.width = sourceImage.width * scale;
-    canvas.height = sourceImage.height * scale;
+    const width = sourceImage.width * scale;
+    const height = sourceImage.height * scale;
+    const ctx = prepareCanvas(canvas, width, height);
+    if (!ctx) return;
 
-    ctx.drawImage(sourceImage, 0, 0, canvas.width, canvas.height);
+    ctx.drawImage(sourceImage, 0, 0, width, height);
   }
 
   function processGrayscale() {
     const canvas = document.getElementById("grayscaleCanvas");
     if (!canvas || !sourceImage) return;
 
-    const ctx = canvas.getContext("2d");
     const maxSize = 300;
     const scale = Math.min(
       maxSize / sourceImage.width,
       maxSize / sourceImage.height,
     );
 
-    canvas.width = sourceImage.width * scale;
-    canvas.height = sourceImage.height * scale;
+    const width = sourceImage.width * scale;
+    const height = sourceImage.height * scale;
+    const ctx = prepareCanvas(canvas, width, height);
+    if (!ctx) return;
 
-    ctx.drawImage(sourceImage, 0, 0, canvas.width, canvas.height);
+    ctx.drawImage(sourceImage, 0, 0, width, height);
 
     const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
     const data = imageData.data;
@@ -1142,7 +1157,6 @@ description: A visual guide to perceptual image hashing using the average hash m
     const canvas = document.getElementById("resizeCanvas");
     if (!canvas || !sourceImage) return;
 
-    const ctx = canvas.getContext("2d");
     const tempCanvas = document.createElement("canvas");
     const tempCtx = tempCanvas.getContext("2d");
 
@@ -1181,8 +1195,8 @@ description: A visual guide to perceptual image hashing using the average hash m
     }
 
     // Animation setup
-    canvas.width = 320;
-    canvas.height = 320;
+    const ctx = prepareCanvas(canvas, 320, 320);
+    if (!ctx) return;
 
     // Calculate original aspect ratio dimensions
     const maxSize = 280;
@@ -1316,9 +1330,8 @@ description: A visual guide to perceptual image hashing using the average hash m
 
     const average = pixelData.reduce((a, b) => a + b, 0) / pixelData.length;
 
-    const ctx = canvas.getContext("2d");
-    canvas.width = 320;
-    canvas.height = 320;
+    const ctx = prepareCanvas(canvas, 320, 320);
+    if (!ctx) return;
 
     const cellSize = 40;
 
@@ -1402,9 +1415,8 @@ description: A visual guide to perceptual image hashing using the average hash m
     const average = pixelData.reduce((a, b) => a + b, 0) / pixelData.length;
     hashBits = pixelData.map((v) => (v >= average ? 1 : 0));
 
-    const ctx = canvas.getContext("2d");
-    canvas.width = 320;
-    canvas.height = 320;
+    const ctx = prepareCanvas(canvas, 320, 320);
+    if (!ctx) return;
 
     const cellSize = 40;
 
@@ -1630,13 +1642,8 @@ description: A visual guide to perceptual image hashing using the average hash m
     const isMobile = width <= 767;
     const cellSize = canvasSize / 8;
 
-    canvas1.width = canvasSize;
-    canvas1.height = canvasSize;
-    canvas2.width = canvasSize;
-    canvas2.height = canvasSize;
-
-    const ctx1 = canvas1.getContext("2d");
-    const ctx2 = canvas2.getContext("2d");
+    const ctx1 = prepareCanvas(canvas1, canvasSize, canvasSize);
+    const ctx2 = prepareCanvas(canvas2, canvasSize, canvasSize);
     if (!ctx1 || !ctx2) return;
 
     // Create two similar hashes with exactly 4 bits different
