@@ -1,0 +1,1461 @@
+---
+layout: slidepost
+title: Authentication and Cryptography
+description: A visual guide to cryptographic signatures, OpenID Connect, JWT verification, and application sessions.
+---
+
+<style>
+  .auth-arrow { color: var(--text-subtle); font-size: 1.3rem; }
+  .auth-caption { color: var(--text-muted); font-size: 0.8rem; text-align: center; }
+  .crypto-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 0.75rem;
+    width: min(100%, 450px);
+    padding: 1rem;
+  }
+  .crypto-card {
+    min-height: 145px;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 0.85rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+  .crypto-card strong { color: var(--text-heading); font-size: 0.9rem; }
+  .crypto-card span { color: var(--text-muted); font-size: 0.75rem; line-height: 1.45; }
+  .crypto-mark { font-family: monospace; font-size: 1.2rem; color: #4444ff; }
+  .hash-demo { width: min(100%, 470px); padding: 1.25rem; font-family: monospace; }
+  .hash-line { border: 1px solid var(--border); padding: 0.7rem; color: var(--text-muted); font-size: 0.76rem; overflow-wrap: anywhere; }
+  .hash-line.typing { min-height: 2.8rem; color: var(--text-heading); }
+  .hash-output { color: #4444ff; letter-spacing: 0.08em; font-size: 0.7rem; min-height: 3.2rem; }
+  .hash-arrow { text-align: center; color: var(--text-subtle); padding: 0.45rem; }
+  .hash-cursor::after { content: "_"; animation: blink 0.8s step-end infinite; }
+  .secret-stage { width: 100%; height: 100%; padding: 1.25rem 1rem; display: flex; align-items: stretch; }
+  .secret-lane { display: grid; grid-template-columns: 1fr 1.3fr 1fr; gap: 0; align-items: stretch; width: 100%; }
+  .secret-zone { border: 1px solid var(--border); padding: 1rem 0.9rem; display: flex; flex-direction: column; justify-content: center; gap: 0.4rem; min-width: 0; }
+  .secret-zone:first-child { border-right: 3px solid #ff8800; border-radius: 8px 0 0 8px; }
+  .secret-zone:last-child { border-left: 3px solid #ff8800; border-radius: 0 8px 8px 0; }
+  .secret-actor { font-family: "Helvetica Neue", Helvetica, Arial, sans-serif; font-weight: bold; font-size: 0.85rem; color: var(--text-heading); text-align: center; margin-bottom: 0.25rem; }
+  .secret-line { font-family: monospace; font-size: 0.72rem; text-align: center; overflow-wrap: anywhere; min-height: 1.2rem; color: var(--text-muted); }
+  .secret-line.payload { color: var(--text-heading); }
+  .secret-line.secret-value { color: #b85d00; }
+  body.dark .secret-line.secret-value { color: #ffab4d; }
+  .secret-line.signature { color: #4444ff; font-weight: bold; letter-spacing: 0.05em; }
+  .secret-line.received { color: #16854d; }
+  body.dark .secret-line.received { color: #4fd28b; }
+  .secret-op { text-align: center; color: var(--text-subtle); font-size: 0.85rem; line-height: 1; }
+  .secret-public { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 0.6rem; padding: 0.5rem; }
+  .secret-public-label { font-family: "Helvetica Neue", Helvetica, Arial, sans-serif; font-size: 0.62rem; color: var(--text-subtle); text-transform: uppercase; letter-spacing: 0.06em; text-align: center; }
+  .secret-channel { position: relative; width: 100%; height: 34px; }
+  .secret-channel::before { content: ""; position: absolute; left: 0; right: 0; top: 50%; border-top: 1px dashed var(--border); }
+  .trust-packet { position: absolute; top: calc(50% - 10px); left: 0; opacity: 0; white-space: nowrap; font-family: monospace; font-size: 0.62rem; border: 1px solid #22aa66; border-radius: 5px; background: var(--card-bg); color: #16854d; padding: 0.25rem 0.5rem; }
+  body.dark .trust-packet { color: #4fd28b; }
+  .trust-packet.sending { animation: trustPacketTravel 1.1s ease-in-out forwards; }
+  @keyframes trustPacketTravel {
+    0% { left: -5%; opacity: 0; }
+    12%, 85% { opacity: 1; }
+    100% { left: calc(100% - 60px); opacity: 0; }
+  }
+  @media (max-width: 460px) {
+    .secret-lane { grid-template-columns: 1fr; }
+    .secret-zone:first-child { border-right: 1px solid var(--border); border-bottom: 3px solid #ff8800; border-radius: 8px 8px 0 0; }
+    .secret-zone:last-child { border-left: 1px solid var(--border); border-top: 3px solid #ff8800; border-radius: 0 0 8px 8px; }
+  }
+  @keyframes blink { 50% { opacity: 0; } }
+  .mitm-attacker-box { border: 1px solid #d22; border-radius: 8px; padding: 0.4rem 0.6rem; text-align: center; margin-top: 0.5rem; }
+  .mitm-attacker-title { display: block; font-family: "Helvetica Neue", Helvetica, Arial, sans-serif; font-size: 0.6rem; font-weight: bold; color: #d22; }
+  .mitm-attacker-edit { display: block; font-family: monospace; font-size: 0.6rem; color: #d22; margin-top: 0.3rem; min-height: 1.1rem; }
+  .trust-packet.leg-in { animation: packetLegIn 700ms ease-in-out forwards; }
+  .trust-packet.leg-out { animation: packetLegOut 700ms ease-in-out forwards; }
+  @keyframes packetLegIn {
+    0% { left: -5%; opacity: 0; }
+    20%, 100% { opacity: 1; }
+    100% { left: 42%; }
+  }
+  @keyframes packetLegOut {
+    0% { left: 42%; opacity: 1; }
+    80% { opacity: 1; }
+    100% { left: calc(100% - 60px); opacity: 0; }
+  }
+  .key-chip { display: inline-block; align-self: center; border: 1px solid #ff8800; border-radius: 8px; padding: 0.4rem 0.75rem; font-family: monospace; font-size: 0.72rem; color: #b85d00; }
+  body.dark .key-chip { color: #ffab4d; }
+  .key-chip.public { border-color: #22aa66; color: #16854d; }
+  body.dark .key-chip.public { color: #4fd28b; }
+  .key-chip.pending { opacity: 0; transition: opacity 0.4s ease; }
+  .secret-zone.open:first-child { border-right: 1px solid var(--border); border-radius: 8px 0 0 8px; }
+  .secret-zone.open:last-child { border-left: 1px solid var(--border); border-radius: 0 8px 8px 0; }
+  .fetch-request { position: absolute; top: calc(50% - 4px); left: 96%; width: 8px; height: 8px; border-radius: 50%; background: var(--text-subtle); opacity: 0; animation: fetchRequest 3.2s ease-in-out infinite; }
+  @keyframes fetchRequest {
+    0%, 4% { left: 96%; opacity: 0; }
+    10%, 26% { opacity: 0.8; }
+    32%, 100% { left: 46%; opacity: 0; }
+  }
+  .trust-packet.looping { animation: trustPacketLoop 3.2s ease-in-out infinite; }
+  @keyframes trustPacketLoop {
+    0%, 38% { left: 46%; opacity: 0; }
+    44%, 62% { opacity: 1; }
+    68%, 100% { left: calc(100% - 60px); opacity: 0; }
+  }
+  .trust-packet.looping-full { animation: trustPacketLoopFull 3s ease-in-out infinite; }
+  @keyframes trustPacketLoopFull {
+    0%, 6% { left: -5%; opacity: 0; }
+    20%, 80% { opacity: 1; }
+    94%, 100% { left: calc(100% - 60px); opacity: 0; }
+  }
+  .public-warning { border: 1px dashed var(--text-subtle); border-radius: 8px; padding: 0.5rem 0.7rem; color: var(--text-muted); font-size: 0.66rem; text-align: center; margin-top: 0.5rem; }
+  .sign-result.unknown { color: var(--text-subtle); }
+  .fetch-request.sending { animation: fetchRequestOnce 700ms ease-in-out forwards; }
+  @keyframes fetchRequestOnce {
+    0% { left: 96%; opacity: 0; }
+    15%, 85% { opacity: 1; }
+    100% { left: 46%; opacity: 0; }
+  }
+  .trust-packet.fetch-out { animation: fetchKeyOut 700ms ease-in-out forwards; }
+  @keyframes fetchKeyOut {
+    0% { left: 46%; opacity: 0; }
+    15%, 85% { opacity: 1; }
+    100% { left: calc(100% - 60px); opacity: 0; }
+  }
+  .trust-packet.cipher-out { animation: cipherOut 900ms ease-in-out forwards; }
+  @keyframes cipherOut {
+    0% { left: calc(100% - 60px); opacity: 0; }
+    15%, 85% { opacity: 1; }
+    100% { left: -5%; opacity: 0; }
+  }
+  .key-shield { animation: keyShield 3s ease-in-out infinite; }
+  @keyframes keyShield {
+    0%, 100% { box-shadow: 0 0 0 0 rgba(255, 136, 0, 0); }
+    50% { box-shadow: 0 0 0 8px rgba(255, 136, 0, 0.16); }
+  }
+  .signed-message { font-family: monospace; font-size: 0.7rem; border: 1px dashed var(--border); padding: 0.65rem; color: var(--text-muted); text-align: center; }
+  .jwt-demo { width: min(100%, 470px); padding: 1rem; display: flex; flex-wrap: wrap; gap: 0.35rem; justify-content: center; font-family: monospace; }
+  .jwt-part { border: 1px solid var(--border); border-radius: 6px; padding: 0.75rem 0.5rem; font-size: 0.67rem; overflow-wrap: anywhere; max-width: 100%; }
+  .jwt-part.header { color: #4444ff; border-color: #4444ff; }
+  .jwt-part.payload { color: #16854d; border-color: #22aa66; }
+  .jwt-part.signature { color: #b85d00; border-color: #ff8800; }
+  body.dark .jwt-part.payload { color: #4fd28b; }
+  body.dark .jwt-part.signature { color: #ffab4d; }
+  .jwt-dot { color: var(--text-subtle); align-self: center; }
+  .jwt-pipeline { width: min(100%, 470px); padding: 1rem; display: flex; flex-direction: column; gap: 0.5rem; }
+  .jwt-raw-row { display: flex; align-items: center; gap: 0.6rem; }
+  .jwt-raw-label { font-family: "Helvetica Neue", Helvetica, Arial, sans-serif; font-size: 0.62rem; color: var(--text-subtle); text-transform: uppercase; letter-spacing: 0.05em; min-width: 4.2rem; text-align: right; }
+  .jwt-raw-json { flex: 1; font-family: monospace; font-size: 0.68rem; border: 1px dashed var(--border); border-radius: 6px; padding: 0.5rem 0.6rem; color: var(--text-muted); overflow-wrap: anywhere; min-height: 1.3rem; transition: border-color 0.3s ease; }
+  .jwt-raw-json.encoded-flash { border-color: #22aa66; border-style: solid; }
+  .jwt-encode-arrow { text-align: center; color: var(--text-subtle); font-size: 0.68rem; }
+  .claim-list { width: min(100%, 390px); display: flex; flex-direction: column; gap: 0.45rem; padding: 1rem; font-family: monospace; }
+  .claim { display: flex; align-items: center; gap: 0.75rem; border-bottom: 1px solid var(--border-subtle); padding: 0.5rem; font-size: 0.78rem; color: var(--text-muted); }
+  .claim code { color: #4444ff; min-width: 5ch; }
+  .claim-check { margin-left: auto; font-weight: bold; color: var(--text-subtle); min-width: 1.2em; text-align: center; }
+  .claim-check.valid { color: #22aa66; }
+  .claim-check.invalid { color: #d22; }
+  .verify-flow { width: min(100%, 460px); padding: 1rem; display: flex; flex-direction: column; gap: 0.65rem; }
+  .verify-step { display: flex; align-items: center; gap: 0.75rem; border: 1px solid var(--border); border-radius: 8px; padding: 0.75rem; color: var(--text-muted); font-size: 0.78rem; }
+  .step-num { width: 1.7rem; height: 1.7rem; display: grid; place-items: center; flex: 0 0 auto; border-radius: 50%; background: #4444ff; color: #fff; font-weight: bold; transition: background 0.4s ease; }
+  .jwks-keyset { display: flex; gap: 0.5rem; justify-content: center; flex-wrap: wrap; padding: 0.25rem 0; }
+  .jwks-key { font-family: monospace; font-size: 0.68rem; border: 1px solid var(--border); border-radius: 6px; padding: 0.4rem 0.6rem; color: var(--text-muted); opacity: 0; transition: opacity 0.4s ease, border-color 0.4s ease, color 0.4s ease; }
+  .jwks-key.visible { opacity: 1; }
+  .jwks-key.matched { border-color: #22aa66; color: #16854d; }
+  body.dark .jwks-key.matched { color: #4fd28b; }
+  .jwks-key.dimmed { opacity: 0.35; }
+  .flow-lane { width: min(100%, 470px); padding: 1rem; display: flex; flex-direction: column; gap: 0.5rem; }
+  .flow-party { display: grid; grid-template-columns: 90px 1fr; gap: 0.6rem; align-items: center; font-size: 0.75rem; opacity: 0; transform: translateY(6px); transition: opacity 0.5s ease, transform 0.5s ease; }
+  .flow-party.visible { opacity: 1; transform: translateY(0); }
+  .flow-name { color: var(--text-heading); font-weight: bold; text-align: right; }
+  .flow-message { border: 1px solid var(--border); border-radius: 6px; padding: 0.5rem 0.7rem; color: var(--text-muted); }
+  .flow-message.request { border-color: #4444ff; }
+  .flow-message.result { border-color: #22aa66; }
+  .session-chain { width: min(100%, 460px); padding: 1rem; display: flex; align-items: center; justify-content: center; flex-wrap: wrap; gap: 0.55rem; }
+  .chain-node { border: 1px solid var(--border); border-radius: 999px; padding: 0.45rem 0.7rem; font-size: 0.73rem; color: var(--text-muted); font-family: monospace; opacity: 0; transform: translateY(6px); transition: opacity 0.5s ease, transform 0.5s ease, border-color 0.4s ease, color 0.4s ease; }
+  .chain-node.visible { opacity: 1; transform: translateY(0); }
+  .chain-node.trusted { border-color: #22aa66; color: #16854d; }
+  body.dark .chain-node.trusted { color: #4fd28b; }
+  .rsa-note { width: min(100%, 430px); padding: 1.25rem; font-family: monospace; color: var(--text-muted); font-size: 0.8rem; }
+  .rsa-equation { border: 1px solid var(--border); border-radius: 8px; padding: 0.85rem; margin: 0.65rem 0; color: var(--text-heading); text-align: center; }
+  .rsa-section { margin-bottom: 1.1rem; }
+  .rsa-section-title { color: var(--text-heading); font-family: "Helvetica Neue", Helvetica, Arial, sans-serif; font-size: 0.72rem; font-weight: bold; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 0.4rem; }
+
+  .sign-result { font-family: "Helvetica Neue", Helvetica, Arial, sans-serif; font-weight: bold; font-size: 0.85rem; text-align: center; padding: 0.6rem; min-height: 1.4rem; }
+  .sign-result.valid { color: #16854d; }
+  .sign-result.invalid { color: #d22; }
+  body.dark .sign-result.valid { color: #4fd28b; }
+  @media (max-width: 460px) {
+    .crypto-grid { grid-template-columns: 1fr; }
+    .crypto-card { min-height: auto; }
+    .jwt-demo { flex-direction: column; }
+    .jwt-dot { display: none; }
+    .flow-party { grid-template-columns: 1fr; gap: 0.15rem; }
+    .flow-name { text-align: left; }
+  }
+</style>
+
+<div class="slide">
+  <div class="slide-text">
+    <h2>Trust Is Hard on the Internet</h2>
+    <p>Alice and Bob are never actually in the same room. Every message between them crosses a public network &mdash; wires, routers, and servers that neither of them controls.</p>
+    <p>Anyone on that network can read a message, copy it, or quietly change it before it arrives. So when Bob receives "Hi Bob, it's Alice," he's left holding two unanswered questions.</p>
+    <p><strong>Who actually sent this?</strong> And <strong>did it arrive exactly as sent?</strong> This talk is about how cryptography lets Bob answer both, without ever trusting the network in between.</p>
+  </div>
+  <div class="slide-animation">
+    <div class="secret-stage">
+      <div class="secret-lane">
+        <div class="secret-zone open">
+          <div class="secret-actor">Alice</div>
+          <div class="secret-line payload">&quot;Hi Bob, it's Alice&quot;</div>
+        </div>
+        <div class="secret-public">
+          <div class="secret-public-label">public network</div>
+          <div class="secret-channel"><span class="trust-packet looping-full">&quot;Hi Bob, it's Alice&quot;</span></div>
+          <div class="public-warning">anyone here can read it, copy it, or change it</div>
+        </div>
+        <div class="secret-zone open">
+          <div class="secret-actor">Bob</div>
+          <div class="secret-line payload">&quot;Hi Bob, it's Alice&quot;</div>
+          <div class="secret-op">really from Alice? unchanged?</div>
+          <div class="sign-result unknown">? ? ?</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="slide">
+  <div class="slide-text">
+    <h2>Three Cryptographic Jobs</h2>
+    <p>Cryptography gives software three distinct capabilities. Authentication relies primarily on signatures.</p>
+    <ul>
+      <li><strong>Hashing</strong> creates a tamper-evident fingerprint.</li>
+      <li><strong>Encryption</strong> keeps data secret.</li>
+      <li><strong>Signatures</strong> prove an issuer approved unchanged data.</li>
+    </ul>
+  </div>
+  <div class="slide-animation">
+    <div class="crypto-grid">
+      <div class="crypto-card"><div class="crypto-mark">#</div><strong>Hash</strong><span>Same input, same fixed-length fingerprint. One-way by design.</span></div>
+      <div class="crypto-card"><div class="crypto-mark">&asymp;</div><strong>Encrypt</strong><span>Readable data becomes secret ciphertext that a key can recover.</span></div>
+      <div class="crypto-card"><div class="crypto-mark">&check;</div><strong>Sign</strong><span>A private key attaches proof that a public key can verify.</span></div>
+    </div>
+  </div>
+</div>
+
+<div class="slide">
+  <div class="slide-text">
+    <h2>Hashing Detects Changes</h2>
+    <p>A cryptographic hash converts arbitrary data into a fixed-size fingerprint. Each character added to this JSON produces a dramatically different result.</p>
+    <p>Hashes do not hide their input. For passwords, use a dedicated slow password-hashing algorithm such as Argon2id, bcrypt, or scrypt.</p>
+  </div>
+  <div class="slide-animation">
+    <div class="hash-demo" id="hashDemo">
+      <div class="hash-line typing hash-cursor" id="hashInput"></div>
+      <div class="hash-arrow">SHA-256 &darr;</div>
+      <div class="hash-line hash-output" id="hashOutput"></div>
+    </div>
+  </div>
+</div>
+
+<div class="slide">
+  <div class="slide-text">
+    <h2>Shared Secrets Authenticate a Payload</h2>
+    <p>Alice and Bob already share a secret. Alice builds the payload and signs it by running it through a keyed hash together with the secret &mdash; an <strong>HMAC</strong> &mdash; then sends Bob the payload plus that signature.</p>
+    <p>Bob runs the payload he received through the same HMAC using the same secret. If his result matches the signature Alice sent, he knows it came from someone who knew the secret and wasn't changed along the way.</p>
+    <p>This is a <strong>message authentication code</strong>, not a public-key signature: both parties hold the same secret.</p>
+  </div>
+  <div class="slide-animation">
+    <div class="secret-stage" id="hmacDemo">
+      <div class="secret-lane">
+        <div class="secret-zone">
+          <div class="secret-actor">Alice</div>
+          <div class="secret-line payload hash-cursor" id="senderPayload"></div>
+          <div class="secret-op">+</div>
+          <div class="secret-line secret-value">&#128274; winter-bridge-47</div>
+          <div class="secret-op">=</div>
+          <div class="secret-line signature" id="senderMac"></div>
+        </div>
+        <div class="secret-public">
+          <div class="secret-public-label">public network</div>
+          <div class="secret-channel"><span class="trust-packet" id="hmacPacket">payload + signature</span></div>
+        </div>
+        <div class="secret-zone">
+          <div class="secret-actor">Bob</div>
+          <div class="secret-line payload received" id="receiverPayload"></div>
+          <div class="secret-op">+</div>
+          <div class="secret-line secret-value">&#128274; winter-bridge-47</div>
+          <div class="secret-op">=</div>
+          <div class="secret-line signature" id="receiverMac"></div>
+          <div class="secret-op">vs. received</div>
+          <div class="secret-line signature received" id="receivedSignature"></div>
+          <div class="sign-result" id="macMatch"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="slide">
+  <div class="slide-text">
+    <h2>A Man in the Middle Is Detected</h2>
+    <p>An intermediary sitting on the public network can read and rewrite Alice's payload. But it doesn't know the shared secret, so it can't produce a new signature to match its edit &mdash; it can only forward the old one.</p>
+    <p>Bob recomputes the HMAC on the payload he actually received. Since that payload was changed, his result no longer matches the signature Alice sent, and he rejects it.</p>
+  </div>
+  <div class="slide-animation">
+    <div class="secret-stage" id="mitmDemo">
+      <div class="secret-lane">
+        <div class="secret-zone">
+          <div class="secret-actor">Alice</div>
+          <div class="secret-line payload hash-cursor" id="mitmSenderPayload"></div>
+          <div class="secret-op">+</div>
+          <div class="secret-line secret-value">&#128274; winter-bridge-47</div>
+          <div class="secret-op">=</div>
+          <div class="secret-line signature" id="mitmSenderMac"></div>
+        </div>
+        <div class="secret-public">
+          <div class="secret-public-label">public network</div>
+          <div class="secret-channel"><span class="trust-packet" id="mitmPacket"></span></div>
+          <div class="mitm-attacker-box">
+            <span class="mitm-attacker-title">Intermediary (no secret)</span>
+            <span class="mitm-attacker-edit" id="mitmEdit"></span>
+          </div>
+        </div>
+        <div class="secret-zone">
+          <div class="secret-actor">Bob</div>
+          <div class="secret-line payload received" id="mitmReceiverPayload"></div>
+          <div class="secret-op">+</div>
+          <div class="secret-line secret-value">&#128274; winter-bridge-47</div>
+          <div class="secret-op">=</div>
+          <div class="secret-line signature" id="mitmReceiverMac"></div>
+          <div class="secret-op">vs. received</div>
+          <div class="secret-line signature received" id="mitmReceivedSignature"></div>
+          <div class="sign-result" id="mitmMatch"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="slide">
+  <div class="slide-text">
+    <h2>Public and Private Keys</h2>
+    <p>Asymmetric cryptography uses a matched pair of keys, but the two halves are treated very differently. Alice's <strong>private key</strong> stays behind her wall and never travels anywhere.</p>
+    <p>Alice's <strong>public key</strong> lives out in the open, on the other side of that same wall. Alice doesn't send it to anyone; Bob (or anyone else) simply fetches a copy whenever he needs it. That's fine, because a public key can't do anything a private key can undo.</p>
+  </div>
+  <div class="slide-animation">
+    <div class="secret-stage" id="keysDemo">
+      <div class="secret-lane">
+        <div class="secret-zone">
+          <div class="secret-actor">Alice</div>
+          <div class="key-chip key-shield">&#128274; private key</div>
+          <div class="secret-op">stays behind the wall</div>
+        </div>
+        <div class="secret-public">
+          <div class="secret-public-label">public space</div>
+          <div class="key-chip public">&#128275; public key</div>
+          <div class="secret-channel">
+            <span class="fetch-request"></span>
+            <span class="trust-packet looping">public key</span>
+          </div>
+        </div>
+        <div class="secret-zone open">
+          <div class="secret-actor">Bob</div>
+          <div class="key-chip public">&#128275; public key</div>
+          <div class="secret-op">fetches a copy whenever he needs it</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="slide">
+  <div class="slide-text">
+    <h2>Encryption: Public Locks, Private Unlocks</h2>
+    <p>Bob first fetches Alice's public key from the public space, same as before. Then he uses it to lock up a message meant only for her.</p>
+    <p>Once locked, only Alice's private key, still safe behind her wall, can open it back up. Unlike HMAC, the two sides never share a secret &mdash; Bob only ever holds the public half.</p>
+  </div>
+  <div class="slide-animation">
+    <div class="secret-stage" id="encryptDemo">
+      <div class="secret-lane">
+        <div class="secret-zone">
+          <div class="secret-actor">Alice</div>
+          <div class="key-chip key-shield">&#128274; private key</div>
+          <div class="secret-line signature received" id="encCiphertextIn"></div>
+          <div class="secret-op">decrypt with private key</div>
+          <div class="secret-line signature received" id="encRecovered"></div>
+        </div>
+        <div class="secret-public">
+          <div class="secret-public-label">public space</div>
+          <div class="key-chip public">&#128275; public key</div>
+          <div class="secret-channel">
+            <span class="fetch-request" id="encFetch"></span>
+            <span class="trust-packet" id="encKeyPacket"></span>
+          </div>
+          <div class="secret-channel">
+            <span class="trust-packet" id="encCipherPacket"></span>
+          </div>
+        </div>
+        <div class="secret-zone open">
+          <div class="secret-actor">Bob</div>
+          <div class="secret-line payload hash-cursor" id="encPlain"></div>
+          <div class="key-chip public pending" id="encBobKey">&#128275; public key</div>
+          <div class="secret-op">encrypt with public key</div>
+          <div class="secret-line signature" id="encCiphertextOut"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="slide">
+  <div class="slide-text">
+    <h2>Signing: Private Signs, Public Verifies</h2>
+    <p>Bob fetches Alice's public key the same way as before. Alice signs her message with her private key, and Bob verifies it with the public key he fetched &mdash; no shared secret involved.</p>
+    <p>Compare that to the HMAC slide: there, verifying required holding the <em>same</em> secret Alice used, so anyone who could check a signature could also forge one. Here, signing and verifying use different keys, so <strong>anyone</strong> with Alice's public key can verify her signature &mdash; and doing so gives them no power to produce a valid one themselves.</p>
+    <p>A forger sitting out in the public space never touches Alice's wall. Whatever they sign, Bob's verification fails: that's the source of trust.</p>
+  </div>
+  <div class="slide-animation">
+    <div class="secret-stage" id="signDemo">
+      <div class="secret-lane">
+        <div class="secret-zone">
+          <div class="secret-actor">Alice</div>
+          <div class="key-chip key-shield">&#128274; private key</div>
+          <div class="secret-line payload hash-cursor" id="signSenderPayload"></div>
+          <div class="secret-op">sign with private key</div>
+          <div class="secret-line signature" id="signSenderMac"></div>
+        </div>
+        <div class="secret-public">
+          <div class="secret-public-label">public space</div>
+          <div class="key-chip public">&#128275; public key</div>
+          <div class="secret-channel">
+            <span class="fetch-request" id="signFetch"></span>
+            <span class="trust-packet" id="signKeyPacket"></span>
+          </div>
+          <div class="secret-channel">
+            <span class="trust-packet" id="signMsgPacket"></span>
+          </div>
+          <div class="mitm-attacker-box" id="signForgerBox" style="visibility: hidden">
+            <span class="mitm-attacker-title">Forger (no private key)</span>
+            <span class="mitm-attacker-edit" id="signForgerMessage"></span>
+          </div>
+        </div>
+        <div class="secret-zone open">
+          <div class="secret-actor">Bob</div>
+          <div class="key-chip public pending" id="signBobKey">&#128275; public key</div>
+          <div class="secret-line payload received" id="signReceiverPayload"></div>
+          <div class="secret-line signature received" id="signReceiverSignature"></div>
+          <div class="secret-op">verify with public key</div>
+          <div class="sign-result" id="signResult"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+document.addEventListener("DOMContentLoaded", () => {
+  function bytesToHex(bytes) {
+    return Array.from(bytes, (byte) => byte.toString(16).padStart(2, "0"))
+      .join("")
+      .toUpperCase();
+  }
+
+  async function hashText(text) {
+    const data = new TextEncoder().encode(text);
+    const digest = await crypto.subtle.digest("SHA-256", data);
+    return bytesToHex(new Uint8Array(digest));
+  }
+
+  async function hmacText(text) {
+    const key = await crypto.subtle.importKey(
+      "raw",
+      new TextEncoder().encode("winter-bridge-47"),
+      { name: "HMAC", hash: "SHA-256" },
+      false,
+      ["sign"],
+    );
+    const signature = await crypto.subtle.sign(
+      "HMAC",
+      key,
+      new TextEncoder().encode(text),
+    );
+    return bytesToHex(new Uint8Array(signature));
+  }
+
+  async function playHashDemo() {
+    const input = document.getElementById("hashInput");
+    const output = document.getElementById("hashOutput");
+    if (!input || !output || input.dataset.playing === "true") return;
+
+    input.dataset.playing = "true";
+    const message = '{ "role": "reader" }';
+
+    while (input.closest(".slide")?.isConnected) {
+      input.textContent = "";
+      output.textContent = "";
+
+      for (let index = 0; index < message.length; index++) {
+        const partial = message.slice(0, index + 1);
+        input.textContent = partial;
+        output.textContent = await hashText(partial);
+        await new Promise((resolve) => setTimeout(resolve, 120));
+      }
+
+      await new Promise((resolve) => setTimeout(resolve, 1800));
+    }
+  }
+
+  const hashDemo = document.getElementById("hashDemo");
+  if (hashDemo) {
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries.some((entry) => entry.isIntersecting)) playHashDemo();
+      },
+      { threshold: 0.3 },
+    );
+    observer.observe(hashDemo.closest(".slide"));
+  }
+
+  async function sendPacket(el, duration, className = "sending") {
+    const baseClass = el.dataset.baseClass || el.className.split(" ")[0];
+    el.dataset.baseClass = baseClass;
+    el.className = baseClass;
+    void el.offsetWidth; // force reflow so the animation restarts
+    el.className = `${baseClass} ${className}`;
+    await new Promise((resolve) => setTimeout(resolve, duration));
+  }
+
+  async function playHmacDemo() {
+    const senderPayload = document.getElementById("senderPayload");
+    const receiverPayload = document.getElementById("receiverPayload");
+    const senderMac = document.getElementById("senderMac");
+    const receiverMac = document.getElementById("receiverMac");
+    const receivedSignature = document.getElementById("receivedSignature");
+    const macMatch = document.getElementById("macMatch");
+    const packet = document.getElementById("hmacPacket");
+    if (
+      !senderPayload ||
+      !receiverPayload ||
+      !senderMac ||
+      !receiverMac ||
+      !receivedSignature ||
+      !macMatch ||
+      !packet ||
+      senderPayload.dataset.playing === "true"
+    )
+      return;
+
+    senderPayload.dataset.playing = "true";
+    const message = '{ "role": "reader" }';
+
+    while (senderPayload.closest(".slide")?.isConnected) {
+      senderPayload.textContent = "";
+      receiverPayload.textContent = "";
+      senderMac.textContent = "";
+      receiverMac.textContent = "";
+      receivedSignature.textContent = "";
+      macMatch.textContent = "";
+      macMatch.className = "sign-result";
+      packet.classList.remove("sending");
+
+      for (let index = 0; index < message.length; index++) {
+        senderPayload.textContent = message.slice(0, index + 1);
+        await new Promise((resolve) => setTimeout(resolve, 85));
+      }
+
+      const mac = await hmacText(message);
+      senderMac.textContent = mac;
+      await new Promise((resolve) => setTimeout(resolve, 500));
+
+      // Alice sends Bob the payload and its signature together.
+      await sendPacket(packet, 900);
+
+      // Bob receives the payload; no need to type it out.
+      receiverPayload.textContent = message;
+      await new Promise((resolve) => setTimeout(resolve, 700));
+
+      // Bob computes his own signature from the payload and the shared secret.
+      receiverMac.textContent = await hmacText(message);
+      await new Promise((resolve) => setTimeout(resolve, 900));
+
+      // Now reveal the signature Alice actually sent, to compare against.
+      receivedSignature.textContent = mac;
+      await new Promise((resolve) => setTimeout(resolve, 700));
+
+      // Compare Bob's computed signature to the one Alice sent.
+      const isValid = receiverMac.textContent === receivedSignature.textContent;
+      macMatch.textContent = isValid ? "MATCH: authentic" : "MISMATCH: reject";
+      macMatch.classList.add(isValid ? "valid" : "invalid");
+      await new Promise((resolve) => setTimeout(resolve, 2200));
+    }
+  }
+
+  const hmacDemo = document.getElementById("hmacDemo");
+  if (hmacDemo) {
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries.some((entry) => entry.isIntersecting)) playHmacDemo();
+      },
+      { threshold: 0.3 },
+    );
+    observer.observe(hmacDemo.closest(".slide"));
+  }
+
+  async function playMitmDemo() {
+    const senderPayload = document.getElementById("mitmSenderPayload");
+    const senderMac = document.getElementById("mitmSenderMac");
+    const receiverPayload = document.getElementById("mitmReceiverPayload");
+    const receiverMac = document.getElementById("mitmReceiverMac");
+    const receivedSignature = document.getElementById("mitmReceivedSignature");
+    const macMatch = document.getElementById("mitmMatch");
+    const packet = document.getElementById("mitmPacket");
+    const edit = document.getElementById("mitmEdit");
+    if (
+      !senderPayload ||
+      !senderMac ||
+      !receiverPayload ||
+      !receiverMac ||
+      !receivedSignature ||
+      !macMatch ||
+      !packet ||
+      !edit ||
+      senderPayload.dataset.playing === "true"
+    )
+      return;
+
+    senderPayload.dataset.playing = "true";
+    const message = '{ "role": "reader" }';
+    const alteredMessage = '{ "role": "writer" }';
+
+    while (senderPayload.closest(".slide")?.isConnected) {
+      senderPayload.textContent = "";
+      senderMac.textContent = "";
+      receiverPayload.textContent = "";
+      receiverMac.textContent = "";
+      receivedSignature.textContent = "";
+      macMatch.textContent = "";
+      macMatch.className = "sign-result";
+      edit.textContent = "";
+      packet.classList.remove("sending", "leg-in", "leg-out");
+
+      for (let index = 0; index < message.length; index++) {
+        senderPayload.textContent = message.slice(0, index + 1);
+        await new Promise((resolve) => setTimeout(resolve, 85));
+      }
+
+      const mac = await hmacText(message);
+      senderMac.textContent = mac;
+      await new Promise((resolve) => setTimeout(resolve, 500));
+
+      // Alice's packet reaches the intermediary first.
+      packet.textContent = "payload + signature";
+      await sendPacket(packet, 700, "leg-in");
+
+      // The intermediary can edit the payload, but has no secret to re-sign it.
+      edit.textContent = 'rewrites "reader" \u2192 "writer"';
+      await new Promise((resolve) => setTimeout(resolve, 900));
+
+      // It forwards the altered payload with Alice's original, now-stale signature.
+      packet.textContent = "altered payload + same signature";
+      await sendPacket(packet, 700, "leg-out");
+
+      // Bob receives the altered payload; no need to type it out.
+      receiverPayload.textContent = alteredMessage;
+      await new Promise((resolve) => setTimeout(resolve, 700));
+
+      // Bob computes his own signature from what he actually received.
+      receiverMac.textContent = await hmacText(alteredMessage);
+      await new Promise((resolve) => setTimeout(resolve, 900));
+
+      // Now reveal the signature that arrived with the packet, to compare against.
+      receivedSignature.textContent = mac;
+      await new Promise((resolve) => setTimeout(resolve, 700));
+
+      const isValid = receiverMac.textContent === receivedSignature.textContent;
+      macMatch.textContent = isValid ? "MATCH: authentic" : "MISMATCH: reject";
+      macMatch.classList.add(isValid ? "valid" : "invalid");
+      await new Promise((resolve) => setTimeout(resolve, 2400));
+    }
+  }
+
+  const mitmDemo = document.getElementById("mitmDemo");
+  if (mitmDemo) {
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries.some((entry) => entry.isIntersecting)) playMitmDemo();
+      },
+      { threshold: 0.3 },
+    );
+    observer.observe(mitmDemo.closest(".slide"));
+  }
+
+  function sleep(ms) {
+    return new Promise((resolve) => setTimeout(resolve, ms));
+  }
+
+  function truncateBase64(value, max) {
+    return value.length > max ? `${value.slice(0, max)}\u2026` : value;
+  }
+
+  function bufferToBase64(buffer) {
+    let binary = "";
+    for (const byte of new Uint8Array(buffer)) binary += String.fromCharCode(byte);
+    return btoa(binary);
+  }
+
+  function base64UrlEncode(buffer) {
+    return bufferToBase64(buffer).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
+  }
+
+  let encryptionKeysPromise = null;
+  function getEncryptionKeys() {
+    if (!encryptionKeysPromise) {
+      encryptionKeysPromise = crypto.subtle.generateKey(
+        {
+          name: "RSA-OAEP",
+          modulusLength: 2048,
+          publicExponent: new Uint8Array([1, 0, 1]),
+          hash: "SHA-256",
+        },
+        true,
+        ["encrypt", "decrypt"],
+      );
+    }
+    return encryptionKeysPromise;
+  }
+
+  async function playEncryptDemo() {
+    const plainEl = document.getElementById("encPlain");
+    const bobKeyChip = document.getElementById("encBobKey");
+    const fetchDot = document.getElementById("encFetch");
+    const keyPacket = document.getElementById("encKeyPacket");
+    const cipherPacket = document.getElementById("encCipherPacket");
+    const cipherOutEl = document.getElementById("encCiphertextOut");
+    const cipherInEl = document.getElementById("encCiphertextIn");
+    const recoveredEl = document.getElementById("encRecovered");
+    if (
+      !plainEl ||
+      !bobKeyChip ||
+      !fetchDot ||
+      !keyPacket ||
+      !cipherPacket ||
+      !cipherOutEl ||
+      !cipherInEl ||
+      !recoveredEl ||
+      plainEl.dataset.playing === "true"
+    )
+      return;
+
+    plainEl.dataset.playing = "true";
+    const message = '{ "role": "reader" }';
+    const keys = await getEncryptionKeys();
+
+    while (plainEl.closest(".slide")?.isConnected) {
+      plainEl.textContent = "";
+      bobKeyChip.classList.add("pending");
+      cipherOutEl.textContent = "";
+      cipherInEl.textContent = "";
+      recoveredEl.textContent = "";
+
+      // Bob composes his message.
+      for (let index = 0; index < message.length; index++) {
+        plainEl.textContent = message.slice(0, index + 1);
+        await sleep(85);
+      }
+      await sleep(400);
+
+      // Bob fetches Alice's public key from the public space.
+      await sendPacket(fetchDot, 700, "sending");
+      keyPacket.textContent = "public key";
+      await sendPacket(keyPacket, 700, "fetch-out");
+      bobKeyChip.classList.remove("pending");
+      await sleep(500);
+
+      // Bob encrypts his message with that public key.
+      const encoded = new TextEncoder().encode(message);
+      const ciphertext = await crypto.subtle.encrypt({ name: "RSA-OAEP" }, keys.publicKey, encoded);
+      const cipherText = truncateBase64(bufferToBase64(ciphertext), 40);
+      cipherOutEl.textContent = cipherText;
+      await sleep(700);
+
+      // Bob sends the ciphertext back across the public network to Alice.
+      cipherPacket.textContent = truncateBase64(cipherText, 14);
+      await sendPacket(cipherPacket, 900, "cipher-out");
+
+      // Alice receives it; no need to type it out.
+      cipherInEl.textContent = cipherText;
+      await sleep(700);
+
+      // Alice decrypts with her private key, which never left the wall.
+      const decrypted = await crypto.subtle.decrypt({ name: "RSA-OAEP" }, keys.privateKey, ciphertext);
+      recoveredEl.textContent = new TextDecoder().decode(decrypted);
+      await sleep(2400);
+    }
+  }
+
+  const encryptDemo = document.getElementById("encryptDemo");
+  if (encryptDemo) {
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries.some((entry) => entry.isIntersecting)) playEncryptDemo();
+      },
+      { threshold: 0.3 },
+    );
+    observer.observe(encryptDemo.closest(".slide"));
+  }
+
+  let signingKeysPromise = null;
+  function getSigningKeys() {
+    if (!signingKeysPromise) {
+      signingKeysPromise = crypto.subtle.generateKey(
+        {
+          name: "RSASSA-PKCS1-v1_5",
+          modulusLength: 2048,
+          publicExponent: new Uint8Array([1, 0, 1]),
+          hash: "SHA-256",
+        },
+        true,
+        ["sign", "verify"],
+      );
+    }
+    return signingKeysPromise;
+  }
+
+  async function playSignDemo() {
+    const alicePayload = document.getElementById("signSenderPayload");
+    const aliceSignature = document.getElementById("signSenderMac");
+    const fetchDot = document.getElementById("signFetch");
+    const keyPacket = document.getElementById("signKeyPacket");
+    const msgPacket = document.getElementById("signMsgPacket");
+    const bobKeyChip = document.getElementById("signBobKey");
+    const bobPayload = document.getElementById("signReceiverPayload");
+    const bobSignature = document.getElementById("signReceiverSignature");
+    const resultEl = document.getElementById("signResult");
+    const forgerBox = document.getElementById("signForgerBox");
+    const forgerMessage = document.getElementById("signForgerMessage");
+    if (
+      !alicePayload ||
+      !aliceSignature ||
+      !fetchDot ||
+      !keyPacket ||
+      !msgPacket ||
+      !bobKeyChip ||
+      !bobPayload ||
+      !bobSignature ||
+      !resultEl ||
+      !forgerBox ||
+      !forgerMessage ||
+      alicePayload.dataset.playing === "true"
+    )
+      return;
+
+    alicePayload.dataset.playing = "true";
+    const message = '{ "role": "reader" }';
+    const forgedMessage = '{ "role": "admin" }';
+    const keys = await getSigningKeys();
+
+    while (alicePayload.closest(".slide")?.isConnected) {
+      alicePayload.textContent = "";
+      aliceSignature.textContent = "";
+      bobKeyChip.classList.add("pending");
+      bobPayload.textContent = "";
+      bobSignature.textContent = "";
+      resultEl.textContent = "";
+      resultEl.className = "sign-result";
+      forgerBox.style.visibility = "hidden";
+      forgerMessage.textContent = "";
+
+      // Bob fetches Alice's public key from the public space.
+      await sendPacket(fetchDot, 700, "sending");
+      keyPacket.textContent = "public key";
+      await sendPacket(keyPacket, 700, "fetch-out");
+      bobKeyChip.classList.remove("pending");
+      await sleep(500);
+
+      // Alice signs her real message with her private key.
+      for (let index = 0; index < message.length; index++) {
+        alicePayload.textContent = message.slice(0, index + 1);
+        await sleep(85);
+      }
+
+      const signature = await crypto.subtle.sign(
+        "RSASSA-PKCS1-v1_5",
+        keys.privateKey,
+        new TextEncoder().encode(message),
+      );
+      aliceSignature.textContent = truncateBase64(bufferToBase64(signature), 40);
+      await sleep(600);
+
+      // Alice sends the payload and signature to Bob.
+      msgPacket.textContent = "payload + signature";
+      await sendPacket(msgPacket, 900, "sending");
+
+      bobPayload.textContent = message;
+      bobSignature.textContent = aliceSignature.textContent;
+      await sleep(700);
+
+      const validSignature = await crypto.subtle.verify(
+        "RSASSA-PKCS1-v1_5",
+        keys.publicKey,
+        signature,
+        new TextEncoder().encode(message),
+      );
+      resultEl.textContent = validSignature ? "VALID: signature matches" : "INVALID: signature rejected";
+      resultEl.classList.add(validSignature ? "valid" : "invalid");
+      await sleep(2000);
+
+      // A forger in the public space never touches Alice's wall.
+      resultEl.textContent = "";
+      resultEl.className = "sign-result";
+      bobPayload.textContent = "";
+      bobSignature.textContent = "";
+      forgerBox.style.visibility = "visible";
+
+      for (let index = 0; index < forgedMessage.length; index++) {
+        forgerMessage.textContent = forgedMessage.slice(0, index + 1);
+        await sleep(70);
+      }
+      await sleep(400);
+
+      const fakeSignature = crypto.getRandomValues(new Uint8Array(256));
+      msgPacket.textContent = "fake payload + fake signature";
+      await sendPacket(msgPacket, 700, "fetch-out");
+
+      bobPayload.textContent = forgedMessage;
+      bobSignature.textContent = truncateBase64(bufferToBase64(fakeSignature), 40);
+      await sleep(700);
+
+      const validForgery = await crypto.subtle.verify(
+        "RSASSA-PKCS1-v1_5",
+        keys.publicKey,
+        fakeSignature,
+        new TextEncoder().encode(forgedMessage),
+      );
+      resultEl.textContent = validForgery ? "VALID: signature matches" : "INVALID: signature rejected";
+      resultEl.classList.add(validForgery ? "valid" : "invalid");
+      await sleep(2400);
+    }
+  }
+
+  const signDemo = document.getElementById("signDemo");
+  if (signDemo) {
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries.some((entry) => entry.isIntersecting)) playSignDemo();
+      },
+      { threshold: 0.3 },
+    );
+    observer.observe(signDemo.closest(".slide"));
+  }
+
+  async function playIssuerDemo() {
+    const payloadEl = document.getElementById("issuerPayload");
+    const signatureEl = document.getElementById("issuerSignature");
+    const fetchDot = document.getElementById("issuerFetch");
+    const keyPacket = document.getElementById("issuerKeyPacket");
+    const msgPacket = document.getElementById("issuerMsgPacket");
+    const appKeyChip = document.getElementById("issuerAppKey");
+    const appPayload = document.getElementById("issuerAppPayload");
+    const appSignature = document.getElementById("issuerAppSignature");
+    const resultEl = document.getElementById("issuerResult");
+    const attackerBox = document.getElementById("issuerAttackerBox");
+    const attackerEdit = document.getElementById("issuerAttackerEdit");
+    if (
+      !payloadEl ||
+      !signatureEl ||
+      !fetchDot ||
+      !keyPacket ||
+      !msgPacket ||
+      !appKeyChip ||
+      !appPayload ||
+      !appSignature ||
+      !resultEl ||
+      !attackerBox ||
+      !attackerEdit ||
+      payloadEl.dataset.playing === "true"
+    )
+      return;
+
+    payloadEl.dataset.playing = "true";
+    const claims = '{ "iss": "https://id.example", "sub": "user-42" }';
+    const alteredClaims = '{ "iss": "https://id.example", "sub": "user-1337" }';
+    const keys = await getSigningKeys();
+
+    while (payloadEl.closest(".slide")?.isConnected) {
+      payloadEl.textContent = "";
+      signatureEl.textContent = "";
+      appKeyChip.classList.add("pending");
+      appPayload.textContent = "";
+      appSignature.textContent = "";
+      resultEl.textContent = "";
+      resultEl.className = "sign-result";
+      attackerBox.style.visibility = "hidden";
+      attackerEdit.textContent = "";
+
+      // The application fetches the issuer's public key.
+      await sendPacket(fetchDot, 700, "sending");
+      keyPacket.textContent = "public key";
+      await sendPacket(keyPacket, 700, "fetch-out");
+      appKeyChip.classList.remove("pending");
+      await sleep(500);
+
+      // The issuer signs its claims payload with its private key.
+      for (let index = 0; index < claims.length; index++) {
+        payloadEl.textContent = claims.slice(0, index + 1);
+        await sleep(60);
+      }
+
+      const signature = await crypto.subtle.sign(
+        "RSASSA-PKCS1-v1_5",
+        keys.privateKey,
+        new TextEncoder().encode(claims),
+      );
+      signatureEl.textContent = truncateBase64(bufferToBase64(signature), 40);
+      await sleep(600);
+
+      // The issuer sends the claims and signature toward the application.
+      msgPacket.textContent = "claims + signature";
+      await sendPacket(msgPacket, 700, "leg-in");
+
+      appPayload.textContent = claims;
+      appSignature.textContent = signatureEl.textContent;
+      await sleep(700);
+
+      const validSignature = await crypto.subtle.verify(
+        "RSASSA-PKCS1-v1_5",
+        keys.publicKey,
+        signature,
+        new TextEncoder().encode(claims),
+      );
+      resultEl.textContent = validSignature ? "VALID: unchanged data from this issuer" : "INVALID: signature rejected";
+      resultEl.classList.add(validSignature ? "valid" : "invalid");
+      await sleep(2000);
+
+      // An attacker on the public network rewrites one claim in transit.
+      resultEl.textContent = "";
+      resultEl.className = "sign-result";
+      appPayload.textContent = "";
+      appSignature.textContent = "";
+      attackerBox.style.visibility = "visible";
+
+      const edit = 'rewrites "sub": "user-42" \u2192 "user-1337"';
+      for (let index = 0; index < edit.length; index++) {
+        attackerEdit.textContent = edit.slice(0, index + 1);
+        await sleep(35);
+      }
+      await sleep(400);
+
+      // It forwards the altered claims with the issuer's original, now-stale signature.
+      msgPacket.textContent = "altered claims + same signature";
+      await sendPacket(msgPacket, 700, "leg-out");
+
+      appPayload.textContent = alteredClaims;
+      appSignature.textContent = signatureEl.textContent;
+      await sleep(700);
+
+      const validAfterEdit = await crypto.subtle.verify(
+        "RSASSA-PKCS1-v1_5",
+        keys.publicKey,
+        signature,
+        new TextEncoder().encode(alteredClaims),
+      );
+      resultEl.textContent = validAfterEdit ? "VALID: unchanged data from this issuer" : "INVALID: signature rejected";
+      resultEl.classList.add(validAfterEdit ? "valid" : "invalid");
+      await sleep(2400);
+    }
+  }
+
+  const issuerDemo = document.getElementById("issuerDemo");
+  if (issuerDemo) {
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries.some((entry) => entry.isIntersecting)) playIssuerDemo();
+      },
+      { threshold: 0.3 },
+    );
+    observer.observe(issuerDemo.closest(".slide"));
+  }
+
+  async function playJwtDemo() {
+    const rawLabel = document.getElementById("jwtRawLabel");
+    const rawBox = document.getElementById("jwtRaw");
+    const headerEnc = document.getElementById("jwtHeaderEnc");
+    const payloadEnc = document.getElementById("jwtPayloadEnc");
+    const sigEnc = document.getElementById("jwtSigEnc");
+    if (!rawLabel || !rawBox || !headerEnc || !payloadEnc || !sigEnc || rawBox.dataset.playing === "true") return;
+
+    rawBox.dataset.playing = "true";
+    const headerJson = '{"alg":"RS256","kid":"key-2026"}';
+    const payloadJson = '{"iss":"https://id.example","sub":"user-42"}';
+    const keys = await getSigningKeys();
+
+    while (rawBox.closest(".slide")?.isConnected) {
+      rawLabel.textContent = "header";
+      rawBox.textContent = "";
+      headerEnc.textContent = "";
+      payloadEnc.textContent = "";
+      sigEnc.textContent = "";
+
+      // Type out the raw JSON header, then base64url-encode it in place.
+      rawBox.classList.add("hash-cursor");
+      for (let index = 0; index < headerJson.length; index++) {
+        rawBox.textContent = headerJson.slice(0, index + 1);
+        await sleep(28);
+      }
+      rawBox.classList.remove("hash-cursor");
+      await sleep(350);
+
+      const headerB64 = base64UrlEncode(new TextEncoder().encode(headerJson));
+      headerEnc.textContent = headerB64;
+      rawBox.classList.add("encoded-flash");
+      await sleep(700);
+      rawBox.classList.remove("encoded-flash");
+
+      // Now do the same for the payload, reusing the same raw slot.
+      rawLabel.textContent = "payload";
+      rawBox.textContent = "";
+      rawBox.classList.add("hash-cursor");
+      for (let index = 0; index < payloadJson.length; index++) {
+        rawBox.textContent = payloadJson.slice(0, index + 1);
+        await sleep(28);
+      }
+      rawBox.classList.remove("hash-cursor");
+      await sleep(350);
+
+      const payloadB64 = base64UrlEncode(new TextEncoder().encode(payloadJson));
+      payloadEnc.textContent = payloadB64;
+      rawBox.classList.add("encoded-flash");
+      await sleep(700);
+      rawBox.classList.remove("encoded-flash");
+
+      // Sign the encoded header and payload together with the issuer's private key.
+      const signingInput = `${headerB64}.${payloadB64}`;
+      const signature = await crypto.subtle.sign(
+        "RSASSA-PKCS1-v1_5",
+        keys.privateKey,
+        new TextEncoder().encode(signingInput),
+      );
+      sigEnc.textContent = truncateBase64(base64UrlEncode(signature), 40);
+      await sleep(3400);
+    }
+  }
+
+  const jwtDemo = document.getElementById("jwtDemo");
+  if (jwtDemo) playJwtDemo();
+
+  async function playClaimsDemo() {
+    const checkIds = ["claimCheckIss", "claimCheckAud", "claimCheckExp", "claimCheckNbf", "claimCheckNonce", "claimCheckSub"];
+    const checkEls = checkIds.map((id) => document.getElementById(id));
+    const audExpected = document.getElementById("claimAudExpected");
+    const resultEl = document.getElementById("claimsResult");
+    const root = document.getElementById("claimsDemo");
+    if (!root || !audExpected || !resultEl || checkEls.some((el) => !el) || root.dataset.playing === "true") return;
+
+    root.dataset.playing = "true";
+
+    while (root.closest(".slide")?.isConnected) {
+      // Pass 1: every claim checks out.
+      checkEls.forEach((el) => {
+        el.textContent = "";
+        el.className = "claim-check";
+      });
+      audExpected.textContent = "this application";
+      resultEl.textContent = "";
+      resultEl.className = "sign-result";
+      await sleep(400);
+
+      for (const el of checkEls) {
+        el.textContent = "\u2713";
+        el.classList.add("valid");
+        await sleep(280);
+      }
+      resultEl.textContent = "VALID: every claim checks out";
+      resultEl.classList.add("valid");
+      await sleep(2400);
+
+      // Pass 2: the token was actually issued for a different application.
+      checkEls.forEach((el) => {
+        el.textContent = "";
+        el.className = "claim-check";
+      });
+      audExpected.textContent = "some-other-app.example";
+      resultEl.textContent = "";
+      resultEl.className = "sign-result";
+      await sleep(500);
+
+      checkEls[0].textContent = "\u2713";
+      checkEls[0].classList.add("valid");
+      await sleep(320);
+
+      checkEls[1].textContent = "\u2717";
+      checkEls[1].classList.add("invalid");
+      await sleep(600);
+
+      resultEl.textContent = "REJECTED: aud does not match this application";
+      resultEl.classList.add("invalid");
+      await sleep(2800);
+    }
+  }
+
+  const claimsDemo = document.getElementById("claimsDemo");
+  if (claimsDemo) playClaimsDemo();
+
+  async function playJwksDemo() {
+    const keyEls = Array.from(document.querySelectorAll("#jwksKeySet .jwks-key"));
+    const verifyStep = document.getElementById("jwksVerifyStep");
+    const stepNum = document.getElementById("jwksStepNum");
+    const verifyText = document.getElementById("jwksVerifyText");
+    const root = document.getElementById("jwksDemo");
+    if (!root || !verifyStep || !stepNum || !verifyText || keyEls.length === 0 || root.dataset.playing === "true")
+      return;
+
+    root.dataset.playing = "true";
+    const matchKid = "key-2026";
+
+    while (root.closest(".slide")?.isConnected) {
+      keyEls.forEach((el) => el.classList.remove("visible", "matched", "dimmed"));
+      stepNum.textContent = "4";
+      stepNum.style.background = "";
+      verifyText.textContent = "Verify with that key using an explicitly allowed algorithm.";
+      await sleep(400);
+
+      for (const el of keyEls) {
+        el.classList.add("visible");
+        await sleep(300);
+      }
+      await sleep(500);
+
+      keyEls.forEach((el) => {
+        el.classList.add(el.dataset.kid === matchKid ? "matched" : "dimmed");
+      });
+      await sleep(900);
+
+      stepNum.textContent = "\u2713";
+      stepNum.style.background = "#22aa66";
+      verifyText.textContent = "Verified: the signature checks out against key-2026.";
+      await sleep(2800);
+    }
+  }
+
+  const jwksDemo = document.getElementById("jwksDemo");
+  if (jwksDemo) playJwksDemo();
+
+  async function playOidcFlowDemo() {
+    const rows = Array.from(document.querySelectorAll("#oidcFlowDemo .flow-party"));
+    const root = document.getElementById("oidcFlowDemo");
+    if (!root || rows.length === 0 || root.dataset.playing === "true") return;
+
+    root.dataset.playing = "true";
+
+    while (root.closest(".slide")?.isConnected) {
+      rows.forEach((row) => row.classList.remove("visible"));
+      await sleep(500);
+
+      for (const row of rows) {
+        row.classList.add("visible");
+        await sleep(750);
+      }
+      await sleep(2600);
+    }
+  }
+
+  const oidcFlowDemo = document.getElementById("oidcFlowDemo");
+  if (oidcFlowDemo) playOidcFlowDemo();
+
+  async function playSessionDemo() {
+    const nodes = [1, 2, 3, 4].map((n) => document.getElementById(`sessionNode${n}`));
+    const root = document.getElementById("sessionDemo");
+    if (!root || nodes.some((el) => !el) || root.dataset.playing === "true") return;
+
+    root.dataset.playing = "true";
+
+    while (root.closest(".slide")?.isConnected) {
+      nodes.forEach((node) => node.classList.remove("visible"));
+      nodes[3].textContent = "";
+      await sleep(500);
+
+      for (let index = 0; index < 3; index++) {
+        nodes[index].classList.add("visible");
+        await sleep(650);
+      }
+
+      // Generate a genuinely random opaque session identifier &mdash; not derived from the token.
+      const sessionId = bytesToHex(crypto.getRandomValues(new Uint8Array(8))).toLowerCase();
+      nodes[3].textContent = `sess_${sessionId}`;
+      nodes[3].classList.add("visible");
+      await sleep(3200);
+    }
+  }
+
+  const sessionDemo = document.getElementById("sessionDemo");
+  if (sessionDemo) playSessionDemo();
+});
+</script>
+
+<div class="slide">
+  <div class="slide-text">
+    <h2>Signatures Bind Data to an Issuer</h2>
+    <p>This is the exact mechanism you just watched Alice and Bob use, generalized: the signer is now called an <strong>issuer</strong> (an identity provider, for example), and the verifier is <strong>your application</strong>. Private key signs, public key verifies &mdash; nothing else changes.</p>
+    <p>The signed data is just a claims payload: who it's about (<code>sub</code>), who issued it (<code>iss</code>). Change a single byte after it's signed, and verification fails.</p>
+  </div>
+  <div class="slide-animation">
+    <div class="secret-stage" id="issuerDemo">
+      <div class="secret-lane">
+        <div class="secret-zone">
+          <div class="secret-actor">Issuer</div>
+          <div class="key-chip key-shield">&#128274; private key</div>
+          <div class="secret-line payload hash-cursor" id="issuerPayload"></div>
+          <div class="secret-op">sign with private key</div>
+          <div class="secret-line signature" id="issuerSignature"></div>
+        </div>
+        <div class="secret-public">
+          <div class="secret-public-label">public space</div>
+          <div class="key-chip public">&#128275; public key</div>
+          <div class="secret-channel">
+            <span class="fetch-request" id="issuerFetch"></span>
+            <span class="trust-packet" id="issuerKeyPacket"></span>
+          </div>
+          <div class="secret-channel">
+            <span class="trust-packet" id="issuerMsgPacket"></span>
+          </div>
+          <div class="mitm-attacker-box" id="issuerAttackerBox" style="visibility: hidden">
+            <span class="mitm-attacker-title">Attacker (no private key)</span>
+            <span class="mitm-attacker-edit" id="issuerAttackerEdit"></span>
+          </div>
+        </div>
+        <div class="secret-zone open">
+          <div class="secret-actor">Application</div>
+          <div class="key-chip public pending" id="issuerAppKey">&#128275; public key</div>
+          <div class="secret-line payload received" id="issuerAppPayload"></div>
+          <div class="secret-line signature received" id="issuerAppSignature"></div>
+          <div class="secret-op">verify with public key</div>
+          <div class="sign-result" id="issuerResult"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="slide">
+  <div class="slide-text">
+    <h2>JWT: A Signed Envelope</h2>
+    <p>A JSON Web Token has three Base64url-encoded parts &mdash; header, payload, signature &mdash; joined with dots into one string.</p>
+    <p>Base64url is an encoding, not encryption: fully reversible, no key required. Decode the header or payload yourself with nothing but a text editor. The signature is what can't be faked, because producing it required the issuer's private key.</p>
+  </div>
+  <div class="slide-animation">
+    <div class="jwt-pipeline" id="jwtDemo">
+      <div class="jwt-raw-row">
+        <span class="jwt-raw-label" id="jwtRawLabel">header</span>
+        <div class="jwt-raw-json" id="jwtRaw"></div>
+      </div>
+      <div class="jwt-encode-arrow">base64url encode &darr;</div>
+      <div class="jwt-demo">
+        <div class="jwt-part header" id="jwtHeaderEnc"></div>
+        <span class="jwt-dot">.</span>
+        <div class="jwt-part payload" id="jwtPayloadEnc"></div>
+        <span class="jwt-dot">.</span>
+        <div class="jwt-part signature" id="jwtSigEnc"></div>
+      </div>
+      <div class="auth-caption">anyone can decode the first two parts &mdash; only the issuer's private key could produce the third</div>
+    </div>
+  </div>
+</div>
+
+<div class="slide">
+  <div class="slide-text">
+    <h2>Claims Need Context</h2>
+    <p>A valid signature only proves who signed the token. Your application still has to confirm the token was made for <em>this app</em>, for <em>this login</em>, and is still valid <em>right now</em> &mdash; the signature alone checks none of that.</p>
+    <p>For identity, store the provider's stable <code>iss</code> and <code>sub</code> pair, not an email address alone.</p>
+  </div>
+  <div class="slide-animation">
+    <div class="claim-list" id="claimsDemo">
+      <div class="claim"><code>iss</code><span>expected issuer</span><span class="claim-check" id="claimCheckIss"></span></div>
+      <div class="claim"><code>aud</code><span id="claimAudExpected">this application</span><span class="claim-check" id="claimCheckAud"></span></div>
+      <div class="claim"><code>exp</code><span>not expired</span><span class="claim-check" id="claimCheckExp"></span></div>
+      <div class="claim"><code>nbf</code><span>valid now</span><span class="claim-check" id="claimCheckNbf"></span></div>
+      <div class="claim"><code>nonce</code><span>matches login request</span><span class="claim-check" id="claimCheckNonce"></span></div>
+      <div class="claim"><code>sub</code><span>stable provider user ID</span><span class="claim-check" id="claimCheckSub"></span></div>
+      <div class="sign-result" id="claimsResult"></div>
+    </div>
+  </div>
+</div>
+
+<div class="slide">
+  <div class="slide-text">
+    <h2>Finding the Right Public Key</h2>
+    <p>OpenID Connect providers publish discovery metadata at a standard well-known URL. That metadata points to a JSON Web Key Set (JWKS) &mdash; a small list of the provider's current public keys.</p>
+    <p>The token header's <code>kid</code> selects which key in that set to verify against. Providers rotate keys by adding a new one before retiring the old <code>kid</code> &mdash; no coordinated application release required.</p>
+  </div>
+  <div class="slide-animation">
+    <div class="verify-flow" id="jwksDemo">
+      <div class="verify-step"><span class="step-num">1</span><span>Load trusted provider configuration.</span></div>
+      <div class="verify-step"><span class="step-num">2</span><span>Read its <code>jwks_uri</code> &mdash; a set of public keys.</span></div>
+      <div class="jwks-keyset" id="jwksKeySet">
+        <span class="jwks-key" data-kid="key-2025">kid: key-2025</span>
+        <span class="jwks-key" data-kid="key-2026">kid: key-2026</span>
+        <span class="jwks-key" data-kid="key-2027">kid: key-2027</span>
+      </div>
+      <div class="verify-step"><span class="step-num">3</span><span>Token header says <code>kid: key-2026</code> &mdash; match it to one JWK.</span></div>
+      <div class="verify-step" id="jwksVerifyStep"><span class="step-num" id="jwksStepNum">4</span><span id="jwksVerifyText">Verify with that key using an explicitly allowed algorithm.</span></div>
+    </div>
+  </div>
+</div>
+
+<div class="slide">
+  <div class="slide-text">
+    <h2>The OpenID Connect Flow</h2>
+    <p>The browser redirects the person to the identity provider. After login, the provider returns a short-lived authorization code to the application.</p>
+    <p>The application backend exchanges that code, verifies the resulting ID token using the preceding process, and only then treats the identity as trusted.</p>
+  </div>
+  <div class="slide-animation">
+    <div class="flow-lane" id="oidcFlowDemo">
+      <div class="flow-party"><span class="flow-name">Browser</span><span class="flow-message request">redirect to identity provider &rarr;</span></div>
+      <div class="flow-party"><span class="flow-name">Provider</span><span class="flow-message result">&larr; login complete, return one-time code</span></div>
+      <div class="flow-party"><span class="flow-name">Application</span><span class="flow-message request">exchange code server-side &rarr;</span></div>
+      <div class="flow-party"><span class="flow-name">Provider</span><span class="flow-message result">&larr; ID token and token response</span></div>
+      <div class="flow-party"><span class="flow-name">Application</span><span class="flow-message result">verify signature and claims &check;</span></div>
+    </div>
+  </div>
+</div>
+
+<div class="slide">
+  <div class="slide-text">
+    <h2>Issue Your Own Session</h2>
+    <p>After verification, the application maps <code>(iss, sub)</code> to its own user record and creates a local session. A short-lived opaque session cookie gives the application straightforward logout, revocation, and fresh authorization checks.</p>
+    <p>JWTs are useful assertions. They are not automatically the best browser session format.</p>
+  </div>
+  <div class="slide-animation">
+    <div class="session-chain" id="sessionDemo">
+      <span class="chain-node" id="sessionNode1">Provider</span><span class="auth-arrow">&rarr;</span>
+      <span class="chain-node trusted" id="sessionNode2">verified ID token</span><span class="auth-arrow">&rarr;</span>
+      <span class="chain-node trusted" id="sessionNode3">local user</span><span class="auth-arrow">&rarr;</span>
+      <span class="chain-node trusted" id="sessionNode4"></span>
+      <div class="auth-caption" style="width: 100%">HttpOnly / Secure / SameSite</div>
+    </div>
+  </div>
+</div>
+
+<div class="slide">
+  <div class="slide-text">
+    <h2>Appendix: RSA Math</h2>
+    <p>RSA is one possible asymmetric scheme. It uses three numbers: a public exponent <code>e</code>, a shared modulus <code>n</code>, and a private exponent <code>d</code>. The same modular exponentiation operation runs in either direction, just with different exponents.</p>
+    <p>Real systems also apply carefully specified padding and hash constructions. Use maintained cryptography and OpenID Connect libraries rather than implementing this yourself.</p>
+  </div>
+  <div class="slide-animation">
+    <div class="rsa-note">
+      <div class="rsa-section">
+        <div class="rsa-section-title">Encrypt / decrypt</div>
+        <div class="rsa-equation">ciphertext = message<sup>e</sup> mod n</div>
+        <div>public key components: e, n &mdash; anyone can encrypt</div>
+        <div class="rsa-equation">message = ciphertext<sup>d</sup> mod n</div>
+        <div>private key component: d &mdash; only the owner can decrypt</div>
+      </div>
+      <div class="rsa-section">
+        <div class="rsa-section-title">Sign / verify</div>
+        <div>hash = SHA-256(message)</div>
+        <div class="rsa-equation">signature = hash<sup>d</sup> mod n</div>
+        <div>private key component: d &mdash; only the owner can sign</div>
+        <div class="rsa-equation">verified hash = signature<sup>e</sup> mod n</div>
+        <div>public key components: e, n &mdash; anyone can verify</div>
+      </div>
+      <div style="color: #22aa66">valid signature: verified hash matches a freshly computed message hash</div>
+    </div>
+  </div>
+</div>
