@@ -867,32 +867,28 @@ description: A visual mental model for inference, harnesses, and the shared conc
         color: var(--text-muted);
         text-align: center;
         opacity: 0;
-        animation: flowIn 5s ease-in-out infinite;
       }
       .flow-arrow {
         font-size: 0.85rem;
         color: var(--text-subtle);
         opacity: 0;
-        animation: flowIn 5s ease-in-out infinite;
+      }
+      .flow-demo.play .flow-box,
+      .flow-demo.play .flow-arrow {
+        animation: flowIn 0.5s ease-out forwards;
       }
       @keyframes flowIn {
-        0%,
-        4% {
+        from {
           opacity: 0;
           transform: translateY(-4px);
         }
-        14%,
-        90% {
+        to {
           opacity: 1;
           transform: translateY(0);
         }
-        100% {
-          opacity: 0;
-          transform: translateY(4px);
-        }
       }
     </style>
-    <div class="flow-demo">
+    <div class="flow-demo" id="flowDemo-9">
       <div class="flow-row">
         <div class="flow-box" style="animation-delay: 0s">
           Agent frontmatter<br />tools: [grep, read_file]
@@ -1636,6 +1632,15 @@ description: A visual mental model for inference, harnesses, and the shared conc
     });
   }
 
+  /* ================= Slide 9: Agents and Tools ================= */
+  function playSlide9() {
+    const demo = document.getElementById("flowDemo-9");
+    if (!demo) return;
+    demo.classList.remove("play");
+    void demo.offsetWidth; // restart the CSS animation
+    demo.classList.add("play");
+  }
+
   /* ================= Slide 10: MCPs ================= */
   async function addMcpMsg(container, from, text) {
     const row = document.createElement("div");
@@ -1845,6 +1850,7 @@ description: A visual mental model for inference, harnesses, and the shared conc
       ["sysPromptText-6", playSlide6],
       ["frontmatterText-7", playSlide7],
       ["chat-8", playSlide8],
+      ["flowDemo-9", playSlide9],
       ["mcpMsgs-10", playSlide10],
       ["chat-11", playSlide11],
       ["chat-12", playSlide12],
